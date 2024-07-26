@@ -1,0 +1,23 @@
+
+--- NEW SESSION: 04/07/2024 19:12:48 ---
+/cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 100000
+/cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 150000
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/cavity/SurfacePressureEquality.cavityVolume = 5042.96
+/cubito/cavity/SurfacePressureEquality.volumeGrowth = 2032.83
+/cubito/cavity/SurfacePressureEquality.pressure = 35000
+/cubito/modelSubTopo1.time = 196
