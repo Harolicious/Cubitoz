@@ -2,5 +2,8 @@
 
 #En este repositorio se encuentra todas la scenes creadas para cada robot modular blando.
 
+Como Ejemplo se presenta la rotacion de un módulo.
 
-![runSofa](<Screenshot from 2024-07-26 18-22-00.png>)
+![simulacion mediante SOFA](images/cubito_rotador.png)
+
+Las scenes corresponden a los modulos con deformacion Uniaxial, Biaxial, Shear, Rotador y Tilt.
