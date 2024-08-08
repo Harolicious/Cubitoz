@@ -50,7 +50,7 @@ Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(1.6)
+defineMeshSizes(2)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("CubitoEstirar.vtk")
@@ -63,9 +63,8 @@ DimTagCylinder = (3, CylinderTag)
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(1)
+defineMeshSizes(1.5)
 gmsh.model.mesh.generate(2)
-gmsh.model.mesh.refine()
 gmsh.model.mesh.refine()
 gmsh.write("CubitoEstirar_Cavity.stl")
 gmsh.fltk.run()

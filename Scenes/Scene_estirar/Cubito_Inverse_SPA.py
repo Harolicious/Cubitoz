@@ -131,7 +131,11 @@ def createScene(rootNode):
                         Points.append(Coords)
                         if j>=1:
                             Edges.append([i*Density+j-1,i*Density+j])
-                
+                            if j==29:
+                                Edges.append([i*Density+j, i*Density+j-Density+1])
+                                
+                                
+                            
                 FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
                 FiberNode.addObject("MeshSpringForceField", linesStiffness=1e7)
