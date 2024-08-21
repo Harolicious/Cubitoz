@@ -50,7 +50,7 @@ Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(3)
+defineMeshSizes(2)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("Cubitorotador.vtk")

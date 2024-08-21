@@ -4,37 +4,15 @@
 Created on Thu Oct 26 14:02:25 2023
 
 
-@author: tu_sc
+@author: lab_Harold
 """
 
 import Constants
 import numpy as np
 import gmsh
+from defineMeshSizes import defineMeshSizes
 
 gmsh.initialize()
-
-def defineMeshSizes(lc=0.5):   
-    #-------------------
-    # MeshSizes 
-    #-------------------
-
-    gmsh.model.mesh.field.add("Box", 1)
-    gmsh.model.mesh.field.setNumber(1, "VIn", lc)
-    gmsh.model.mesh.field.setNumber(1, "VOut", lc)
-    gmsh.model.mesh.field.setNumber(1, "XMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "XMax", 100)
-    gmsh.model.mesh.field.setNumber(1, "YMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "YMax", 100)
-    gmsh.model.mesh.field.setNumber(1, "ZMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "ZMax", 100)    
-    gmsh.model.mesh.field.setNumber(1, "Thickness", 0.3)
-     
-    gmsh.model.mesh.field.setAsBackgroundMesh(1)
-    
-    gmsh.option.setNumber("Mesh.CharacteristicLengthExtendFromBoundary", 0)
-    gmsh.option.setNumber("Mesh.CharacteristicLengthFromPoints", 0)
-    gmsh.option.setNumber("Mesh.CharacteristicLengthFromCurvature", 0)
-    
 
 LadoCubo = Constants.LadoCubo
 AlturaCilindro = Constants.AlturaCilindro
@@ -50,7 +28,7 @@ Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(2)
+defineMeshSizes(1.5)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("CubitoEstirar.vtk")
@@ -81,3 +59,5 @@ gmsh.model.mesh.refine()
 
 gmsh.write("Cubito_Estirar_visu.stl")
 
+gmsh.clear()
+gmsh.finalize()

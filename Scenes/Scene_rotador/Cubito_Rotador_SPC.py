@@ -34,10 +34,10 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 0.5
+        self.Increment = 500 #Pa
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 50
+        self.Maxpressure = 40000 #Pa
         self.EndEffectorMO = kwargs['EndEffectorMO']
         
         # Definir ruta de archivo csv 
@@ -47,13 +47,13 @@ class Controller(Sofa.Core.Controller):
         if not os.path.exists(self.csv_file_path):
             with open(self.csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["Time", "Pressure","Position_X", "Position_Y" ,"Position_Z", "Yaw", "Pitch", "Roll"])
+                writer.writerow(["Time", "Pressure","Position_X", "Position_Y" ,"Position_Z", "Angle"])
         
         print('Finished Init')
         
     def save_end_effector_data(self, time):
         position = self.EndEffectorMO.position.value
-        rotation = self.EndEffectorMO.rotation.value
+        # rotation = self.EndEffectorMO.rotation.value
         
         SecondPointCoord = self.EndEffectorMO.position.value[1]
         Angle = np.rad2deg(np.arctan2(SecondPointCoord[2],SecondPointCoord[0]))
@@ -61,7 +61,7 @@ class Controller(Sofa.Core.Controller):
         try:
             with open(self.csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],Angle,rotation[1],rotation[2]])
+                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],Angle])
         except Exception as e:
             print(f"Error al escribir en archivo csv:{e}")
             
@@ -158,7 +158,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 0.001 
+                rootNode.dt = 1 
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
@@ -175,12 +175,12 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17.5, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 180000
-                YM2 = YM1*100
+                YM1 = 125000 #YMd del Ecoflex0030
+                YM2 = YM1*1000
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
                 YMArray[IdxElementsInROI] = YM2

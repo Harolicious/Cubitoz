@@ -7,7 +7,6 @@ Created on Wed Apr 20 14:32:47 2024
 # import Sofa
 import Sofa.Core
 import Constants
-import Constants
 
 import os
 import numpy as np
@@ -88,8 +87,6 @@ def createScene(rootNode):
                 rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
                 rootNode.dt = 1
 
-
-
         #cubito
                 cubito = rootNode.addChild('cubito')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
@@ -157,6 +154,9 @@ def createScene(rootNode):
                         Points.append(Coords)
                         if j>=1:
                             Edges.append([i*Density+j-1,i*Density+j])
+                            if j==29:
+                                Edges.append([i*Density+j, i*Density+j-Density+1])
+                                
                 
                 FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
@@ -173,15 +173,16 @@ def createScene(rootNode):
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 
         # Effector
-                # bunny/effector
-                # goal
+        # bunny/effector
+        # goal
                 goal = rootNode.addChild('goal')
                 goal.addObject('EulerImplicitSolver', firstOrder=True)
                 goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
                 goal.addObject('MechanicalObject', name='goalMO', position=[0, LadoCubo + Displa , 0], showObject=True, showObjectScale=15)
                 goal.addObject('SphereCollisionModel', radius=2.5, group=1)
                 goal.addObject('UncoupledConstraintCorrection')
-                
+  
+        # Punto "End-effector"   
                 effector = cubito.addChild('EffectorNode')
                 effector.addObject('MechanicalObject', position=[0, LadoCubo, 0], showObject=True, showObjectScale=10)
                 PositionEffector = effector.addObject('PositionEffector', indices=0, effectorGoal=goal.goalMO.position.linkpath)

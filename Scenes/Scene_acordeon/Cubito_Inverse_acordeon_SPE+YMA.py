@@ -1,32 +1,44 @@
-import Sofa
+"""
+Created on Wed Apr 28 18:25:43 2024
+
+@author: lab_Harold
+"""
+
+# import Sofa
+import Sofa.Core
+import Constants
 
 import os
 import numpy as np
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
-class Controller(Sofa.Core.Controller):   
+LadoCubo = Constants.LadoCubo
+PSI = 5
+Displa = 3
+
+# class Controller(Sofa.Core.Controller):   
     
-    def __init__(self, *args, **kwargs):
-        Sofa.Core.Controller.__init__(self, *args, **kwargs)
-        print(" Python::__init__::" + str(self.name.value))
+#     def __init__(self, *args, **kwargs):
+#         Sofa.Core.Controller.__init__(self, *args, **kwargs)
+#         print(" Python::__init__::" + str(self.name.value))
         
-        self.RootNode = kwargs['RootNode']
-        self.SPC = kwargs['SPC']
-        self.Increment = 40
-        self.Pressure = 0
-        print(kwargs['RootNode'])
+#         self.RootNode = kwargs['RootNode']
+#         self.SPA = kwargs['SPA']
+#         self.Increment = 40
+#         self.Pressure = 0
+#         print(kwargs['RootNode'])
     
         
-        print('Finished Init')
+#         print('Finished Init')
         
-    def onAnimateBeginEvent(self, eventType):
-        self.Pressure = self.Pressure + self.Increment
-        if self.Pressure > 550 or self.Pressure < 0:
-            # self.Pressure = 550
-            self.Increment = -self.Increment
-        self.SPC.value.value = [self.Pressure]
+#     def onAnimateBeginEvent(self, eventType):
+#         self.Pressure = self.Pressure + self.Increment
+#         if self.Pressure > 550 or self.Pressure < 0:
+#             # self.Pressure = 550
+#             self.Increment = -self.Increment
+#         self.SPA.value.value = [self.Pressure]
         
-        pass
+#         pass
   
         
     # def onKeypressedEvent(self, c):
@@ -135,7 +147,8 @@ def createScene(rootNode):
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
-                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
+                rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
+                rootNode.dt = 1
 
 		#cubito
                 cubito = rootNode.addChild('CubitoBarril')
@@ -153,10 +166,12 @@ def createScene(rootNode):
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
                 boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 2, -13,  13, 17.5, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+    
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 180000
+                YM1 = 100000
                 YM2 = YM1*100
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
@@ -166,6 +181,8 @@ def createScene(rootNode):
                 print(f"Largo de YMArray:{len(YMArray)}")
                 #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
                 cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
+                
+                
                 #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
@@ -173,6 +190,13 @@ def createScene(rootNode):
                 cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
+                modelSubTopo1 = cubito.addChild('modelSubTopo1')
+               
+                boxROIMain.init()
+                modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
+                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3', poissonRatio=0.45, youngModulus=100000)
+                modelSubTopo1.addObject('YoungModulusActuator', template='Vec3', name='actuator', maxYoungVariationRatio=0.02, minYoung=10)
+                # print(f"YM Value:{modelSubTopo1.TetrahedronFEMForceField.youngModulus.value}")
                 #cubito.addObject('UncoupledConstraintCorrection')
                 
 
@@ -261,9 +285,26 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='Cubitoacordeon_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPC = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)
+                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=7000 * PSI) # 48000 Pa or 7 PSI 
                 #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
+                
+        # Effector
+        # bunny/effector
+        # goal
+                goal = rootNode.addChild('goal')
+                goal.addObject('EulerImplicitSolver', firstOrder=True)
+                goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
+                goal.addObject('MechanicalObject', name='goalMO', position=[LadoCubo/5 , LadoCubo + 3 , 0], showObject=True, showObjectScale=15)
+                goal.addObject('SphereCollisionModel', radius=2.5, group=1)
+                goal.addObject('UncoupledConstraintCorrection')
+                
+        # Punto "End-effector"         
+                effector = cubito.addChild('EffectorNode')
+                effector.addObject('MechanicalObject', position=[0, LadoCubo, 0], showObject=True, showObjectScale=10)
+                PositionEffector = effector.addObject('PositionEffector', indices=0, effectorGoal=goal.goalMO.position.linkpath)
+                effector.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
+
 
 
 		#cubito/cubitoVisu
@@ -272,6 +313,6 @@ def createScene(rootNode):
                 cubitoVisu.addObject("OglModel", src="@loader")
                 cubitoVisu.addObject("BarycentricMapping")
                 
-                rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC))
+                # rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPA=SPA))
 
                 return rootNode

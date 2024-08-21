@@ -14,9 +14,13 @@ import numpy as np
 
 LadoCubo = Constants.LadoCubo
 
-
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
+def rotate(degrees):
+    theta = np.radians(degrees)
+    c,s =   np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s),(c, s)))
+    return R
 
 class Controller(Sofa.Core.Controller):   
     
@@ -30,14 +34,14 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 500 #Pa
+        self.Increment = 500
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 40000 #Pa
+        self.Maxpressure = 45000 #Pa
         self.EndEffectorMO = kwargs['EndEffectorMO']
         
         # Definir ruta de archivo csv 
-        self.csv_file_path = "end_effector_data_Estirar.csv"
+        self.csv_file_path = "end_effector_data_Shear.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -49,7 +53,7 @@ class Controller(Sofa.Core.Controller):
         
     def save_end_effector_data(self, time):
         position = self.EndEffectorMO.position.value
-                
+        
         try:
             with open(self.csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
@@ -78,14 +82,14 @@ class Controller(Sofa.Core.Controller):
     
         # Aquí obtienes el tiempo actual de la simulación
         current_time = self.RootNode.time.value
-        
+
         # Imprimir mensaje si la animación ha terminado
         if self.animation_finished:
             # print("animación terminada")
             self.RootNode.dt = 0 
             self.Pressure = 0
             return
-
+        
         # Guardar datos del EndEffector
         self.save_end_effector_data(current_time)
 
@@ -103,7 +107,9 @@ class Controller(Sofa.Core.Controller):
                 self.Decreasing = False  
                 self.animation_finished = True
 
-  
+
+    
+
 def createScene(rootNode):
 
                 rootNode.addObject(
@@ -158,14 +164,14 @@ def createScene(rootNode):
 
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
-                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoEstirar.vtk')
+                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoShear.vtk')
                 Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
                 cubito.addObject('TetrahedronSetTopologyModifier')
 
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-15, 18, -15,  15, 21, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
@@ -183,7 +189,7 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-15, -1, -15,  15, 2, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
                 #cubito.addObject('UncoupledConstraintCorrection')
@@ -197,32 +203,53 @@ def createScene(rootNode):
         #cubito/fibers
         
                 FiberNode = cubito.addChild("FiberReinforcementNode")    
-                Density = 30
+                
+                angle_rad = np.radians(315)
+                rotation_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad),0],
+                                            [np.sin(angle_rad), np.cos(angle_rad), 0],
+                                            [0, 0, 1]])
+                
+                
+                Density = 20
                 IncrementAngle = 2*np.pi/Density
-                Radius = 8
-                NLevels = 7
+                Radius = 6.5
+                NLevels = 6
                 LevelHeight = 2
-                Points = []
+                Rotated_points = []
                 Edges = []
+                
                 for i in range(NLevels):
-                    for j in range(0,30): 
+                    for j in range(Density): 
                         Angle = j*IncrementAngle
-                        Coords = [Radius*np.cos(Angle), 4+i*LevelHeight, Radius*np.sin(Angle)]
-                        Points.append(Coords)
+                        Coords = [Radius*np.cos(Angle), 5+i*LevelHeight, Radius*np.sin(Angle)]
+                        # Points.append(Coords)
+                        # Rotar las coordenadas
+                        Rotated_coords = np.dot(rotation_matrix, Coords)
+                        # Desplazar en el eje x por 2 mm
+                        Rotated_coords[0] += -7
+                        Rotated_coords[1] += 3
+                        Rotated_coords[2] += 0  
+                        # Agregar las coordenadas rotadas
+                        Rotated_points.append(Rotated_coords.tolist())
                         if j>=1:
                             Edges.append([i*Density+j-1,i*Density+j])
                             if j==Density-1:
                                 Edges.append([i*Density+j, i*Density+j-Density+1])
+                            
+        
+                        
                 
-                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
+                FiberNode.addObject("Mesh", position=Rotated_points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e7)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
                 FiberNode.addObject("BarycentricMapping")
                 
                 
 		#cubito/cavity
+                
+        
                 cavity = cubito.addChild('cavity')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoEstirar_Cavity.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoShear_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
                 SPC = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)
@@ -232,7 +259,7 @@ def createScene(rootNode):
 
 		#cubito/cubitoVisu
                 cubitoVisu = cubito.addChild('visu')
-                cubitoVisu.addObject("MeshSTLLoader", filename="Cubito_Estirar_visu.stl", name="loader")
+                cubitoVisu.addObject("MeshSTLLoader", filename="Cubito_Shear_visu.stl", name="loader")
                 cubitoVisu.addObject("OglModel", src="@loader")
                 cubitoVisu.addObject("BarycentricMapping")
                 

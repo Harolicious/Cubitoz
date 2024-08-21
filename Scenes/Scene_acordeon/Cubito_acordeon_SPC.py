@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr 24 15:39:45 2024
+Created on Wed Apr 10 13:37:13 2024
 
 @author: lab_Harold
 """
@@ -13,10 +13,7 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
-
-
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
-
 
 class Controller(Sofa.Core.Controller):   
     
@@ -30,30 +27,33 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 500 #Pa
+        self.Increment = 500
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 40000 #Pa
-        self.EndEffectorMO = kwargs['EndEffectorMO']
-        
+        self.Maxpressure = 65000 #Pa
+        self.EndEffectorMO = kwargs['EndEffectorMO']      
+
         # Definir ruta de archivo csv 
-        self.csv_file_path = "end_effector_data_Estirar.csv"
+        self.csv_file_path = "end_effector_data_Acordeon.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
             with open(self.csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["Time", "Pressure","Position_X", "Position_Y" ,"Position_Z"])
+                writer.writerow(["Time", "Pressure","Position_X", "Position_Y" ,"Position_Z","Angle"])
         
         print('Finished Init')
         
     def save_end_effector_data(self, time):
         position = self.EndEffectorMO.position.value
-                
+        
+        SecondPointCoord = self.EndEffectorMO.position.value[2]
+        Angle = np.rad2deg(np.arctan2(SecondPointCoord[0],SecondPointCoord[1]))
+        
         try:
             with open(self.csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2]])
+                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],Angle])
         except Exception as e:
             print(f"Error al escribir en archivo csv:{e}")
             
@@ -75,17 +75,16 @@ class Controller(Sofa.Core.Controller):
     def onAnimateBeginEvent(self, eventType):
         # print(f"Current End-Effector position: {self.EndEffectorMO.position.value}")        
         # print(f"pressure: {self.Pressure}")
-    
         # Aquí obtienes el tiempo actual de la simulación
         current_time = self.RootNode.time.value
-        
+
         # Imprimir mensaje si la animación ha terminado
         if self.animation_finished:
             # print("animación terminada")
             self.RootNode.dt = 0 
             self.Pressure = 0
             return
-
+        
         # Guardar datos del EndEffector
         self.save_end_effector_data(current_time)
 
@@ -102,8 +101,11 @@ class Controller(Sofa.Core.Controller):
             if self.Pressure <= 0:
                 self.Decreasing = False  
                 self.animation_finished = True
-
   
+        
+  
+
+
 def createScene(rootNode):
 
                 rootNode.addObject(
@@ -151,14 +153,14 @@ def createScene(rootNode):
                 rootNode.dt = 1
 
 		#cubito
-                cubito = rootNode.addChild('cubito')
+                cubito = rootNode.addChild('CubitoAcordeon')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
                 
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
 
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
-                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoEstirar.vtk')
+                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='Cubitoacordeon.vtk')
                 Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
                 cubito.addObject('TetrahedronSetTopologyModifier')
 
@@ -169,7 +171,7 @@ def createScene(rootNode):
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 125000
+                YM1 = 180000
                 YM2 = YM1*100
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
@@ -191,38 +193,92 @@ def createScene(rootNode):
         # Punto "End-effector"
                 
                 EndEffectorNode = cubito.addChild("EndEffectorNode")
-                EndEffectorMO = EndEffectorNode.addObject("MechanicalObject", position=[[0,LadoCubo,0]], showObject=True, showObjectScale=10)
+                EndEffectorMO = EndEffectorNode.addObject("MechanicalObject", position=[[0,LadoCubo,0], [10,LadoCubo,0], [-10,LadoCubo,0]], showObject=True, showObjectScale=10)
                 EndEffectorNode.addObject("BarycentricMapping")
 
         #cubito/fibers
         
-                FiberNode = cubito.addChild("FiberReinforcementNode")    
-                Density = 30
-                IncrementAngle = 2*np.pi/Density
-                Radius = 8
-                NLevels = 7
-                LevelHeight = 2
-                Points = []
-                Edges = []
-                for i in range(NLevels):
-                    for j in range(0,30): 
-                        Angle = j*IncrementAngle
-                        Coords = [Radius*np.cos(Angle), 4+i*LevelHeight, Radius*np.sin(Angle)]
-                        Points.append(Coords)
+
+                FiberNode = cubito.addChild("FiberReinforcementNode1")    
+                Density2 = 15
+                IncrementAngle2 = 2*np.pi/Density2
+                Radius2 = 8
+                NLevels2 = 7
+                LevelHeight2 = 2.1
+                Points2 = []
+                Edges2 = []
+                for i in range(NLevels2):
+                    for j in range(0,Density2): 
+                        Angle2 = j*IncrementAngle2
+                        Coords2 = [Radius2*np.cos(Angle2), 3.5+i*LevelHeight2, Radius2*np.sin(Angle2)]
+                        Points2.append(Coords2)
                         if j>=1:
-                            Edges.append([i*Density+j-1,i*Density+j])
-                            if j==Density-1:
-                                Edges.append([i*Density+j, i*Density+j-Density+1])
-                
-                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
+                            Edges2.append([(i*Density2+j-1),(i*Density2+j)])
+
+                            if j==Density2-1:
+                                for k in range(0,NLevels2):
+                                    Edges2.append([k*Density2,(1+k)*Density2-1])
+                                
+                             
+                                    
+                FiberNode.addObject("Mesh", position=Points2, name="Mesh", edges=Edges2)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e7)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
                 FiberNode.addObject("BarycentricMapping")
                 
-                
+                             
+                FiberNode = cubito.addChild("FiberReinforcementNode3")    
+                Density = 10
+                IncrementAngle = (np.pi/2)/Density
+                Radius = 8
+                Repeat = 6
+                Deg = (np.pi/2)/Repeat
+                LevelHeight = 14
+                Points = []
+                Edges = []
+                for i in range(Density):
+                    for j in range (0,Repeat):
+                        
+                        Angle = i*IncrementAngle+Deg*19
+                        Coords = [Radius*np.cos(Angle+Deg*j), 3.5+i/Density*LevelHeight, Radius*np.sin(Angle+Deg*j)]
+                        Points.append(Coords)
+                        
+                        if i<=Density-2:
+                            Edges.append([i*Repeat+j,i*Repeat+Repeat+j])
+                            
+                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
+                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
+                FiberNode.addObject("BarycentricMapping")
+
+
+                FiberNode = cubito.addChild("FiberReinforcementNode4")    
+                Density4 = 10
+                IncrementAngle4 = (-np.pi/2)/Density4
+                Radius4 = 8
+                Repeat4 = 6
+                Deg4 = (np.pi/2)/Repeat4
+                LevelHeight4 = 14
+                Points4 = []
+                Edges4 = []
+                for i in range(Density4):
+                    for j in range (0,Repeat4):
+                        
+                        Angle4 = i*IncrementAngle4
+                        Coords4 = [Radius4*np.cos(Angle4+Deg4*j), 3.5+i/Density4*LevelHeight4, Radius4*np.sin(Angle4+Deg4*j)]
+                        Points4.append(Coords4)
+                        
+                        if i<=Density4-2:
+                            Edges4.append([i*Repeat4+j,i*Repeat4+Repeat4+j])
+                            
+                FiberNode.addObject("Mesh", position=Points4, name="Mesh", edges=Edges4)
+                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
+                FiberNode.addObject("BarycentricMapping")
+               
 		#cubito/cavity
                 cavity = cubito.addChild('cavity')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoEstirar_Cavity.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='Cubitoacordeon_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
                 SPC = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)
@@ -232,10 +288,10 @@ def createScene(rootNode):
 
 		#cubito/cubitoVisu
                 cubitoVisu = cubito.addChild('visu')
-                cubitoVisu.addObject("MeshSTLLoader", filename="Cubito_Estirar_visu.stl", name="loader")
+                cubitoVisu.addObject("MeshSTLLoader", filename="Cubito_acordeon_visu.stl", name="loader")
                 cubitoVisu.addObject("OglModel", src="@loader")
                 cubitoVisu.addObject("BarycentricMapping")
                 
-                rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC,  EndEffectorMO=EndEffectorMO))
-                
+                rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC, EndEffectorMO=EndEffectorMO))
+
                 return rootNode

@@ -154,7 +154,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
-                rootNode.dt = 0.001
+                rootNode.dt = 1
 
 		#cubito
                 cubito = rootNode.addChild('CubitoShear')
@@ -171,7 +171,7 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-15, 18, -15,  15, 21, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-15, 17, -15,  15, 21, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
@@ -204,7 +204,7 @@ def createScene(rootNode):
                                             [0, 0, 1]])
                 
                 
-                Density = 20
+                Density = 30
                 IncrementAngle = 2*np.pi/Density
                 Radius = 6.5
                 NLevels = 6
@@ -227,6 +227,8 @@ def createScene(rootNode):
                         Rotated_points.append(Rotated_coords.tolist())
                         if j>=1:
                             Edges.append([i*Density+j-1,i*Density+j])
+                            if j==29:
+                                Edges.append([i*Density+j, i*Density+j-Density+1])
                             
         
                         
