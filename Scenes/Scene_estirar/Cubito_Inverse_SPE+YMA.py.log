@@ -90,3 +90,8 @@ Constraint ID : 4  dof ID : 393  value : 0 0 0    dof ID : 820  value : 0 0 0.11
 --- NEW SESSION: 11/07/2024 17:01:12 ---
 /cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 76613.9
 /cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 76613.9
+
+--- NEW SESSION: 26/08/2024 18:34:47 ---
+/cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 79633.4
+/cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 72113
+/cubito/modelSubTopo1/TetrahedronFEMForceField.youngModulus = 16783

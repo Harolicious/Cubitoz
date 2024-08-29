@@ -13,8 +13,8 @@ import numpy as np
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
 LadoCubo = Constants.LadoCubo
-PSI = 5
-Displa = 4
+PSI = 7
+Displa = 9
 
 
 # class Controller(Sofa.Core.Controller):   
@@ -85,7 +85,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
-                rootNode.dt = 1
+                rootNode.dt = 0.001
 
         #cubito
                 cubito = rootNode.addChild('cubito')
@@ -102,8 +102,8 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17.5, -13,  13, 20, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 2, -13,  13, 17.5, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17.5, -13,  13, 20, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 2, -13,  13, 17.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 
                 Container.init()
                 MO.init()
@@ -118,17 +118,16 @@ def createScene(rootNode):
                 print(f"Largo de YMArray:{len(YMArray)}")
                 #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=100000)
                 cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-
-
                 #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=100000)
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, 0, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-13,  0, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                modelSubTopo1 = cubito.addChild('modelSubTopo1')
                 
+                
+                modelSubTopo1 = cubito.addChild('modelSubTopo1')
                 boxROIMain.init()
                 modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
                 modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3', poissonRatio=0.45, youngModulus=100000)
@@ -168,7 +167,7 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoEstirar_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=7000 * PSI) # 48000 Pa or 7 PSI 
+                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=6.89 * PSI) # PSI to KPa
                 #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 
@@ -187,8 +186,6 @@ def createScene(rootNode):
                 effector.addObject('MechanicalObject', position=[0, LadoCubo, 0], showObject=True, showObjectScale=10)
                 PositionEffector = effector.addObject('PositionEffector', indices=0, effectorGoal=goal.goalMO.position.linkpath)
                 effector.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
-
-
 
 		#cubito/cubitoVisu
                 cubitoVisu = cubito.addChild('visu')

@@ -13,8 +13,8 @@ import numpy as np
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
 LadoCubo = Constants.LadoCubo
-PSI = 5
-Displa = 3
+PSI = 5.5
+Displa = 6
 
 # class Controller(Sofa.Core.Controller):   
     
@@ -285,7 +285,7 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='Cubitoacordeon_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=7000 * PSI) # 48000 Pa or 7 PSI 
+                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=6890 * PSI) # 48000 Pa or 7 PSI 
                 #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 

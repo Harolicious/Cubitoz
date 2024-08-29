@@ -13,7 +13,7 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
-
+PSI = 6
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
 def rotate(degrees):
@@ -157,7 +157,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
-                rootNode.dt = 1 
+                rootNode.dt = 0.001 
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
@@ -271,7 +271,7 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='Cubitorotador_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=42000) #42000 Pa or 6 PSI
+                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=6.89 * PSI) #38000 Pa or 5.5 PSI
                 #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 
@@ -281,7 +281,7 @@ def createScene(rootNode):
                 goal = rootNode.addChild('goal')
                 goal.addObject('EulerImplicitSolver', firstOrder=True)
                 goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
-                goal.addObject('MechanicalObject', name='goalMO', position=[0, LadoCubo+5, 0], showObject=True, showObjectScale=15)
+                goal.addObject('MechanicalObject', name='goalMO', position=[0, LadoCubo+1.15, 0], showObject=True, showObjectScale=15)
                 goal.addObject('SphereCollisionModel', radius=2.5, group=1)
                 goal.addObject('UncoupledConstraintCorrection')
                 

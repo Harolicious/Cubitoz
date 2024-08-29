@@ -12,6 +12,8 @@ import os
 import csv
 import numpy as np
 
+PSI = 6.5
+
 LadoCubo = Constants.LadoCubo
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
@@ -27,10 +29,10 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 500
+        self.Maxpressure = 6.89 * PSI #Pa
+        self.Increment = self.Maxpressure/500 #KPa
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 45000 #Pa
         self.EndEffectorMO = kwargs['EndEffectorMO']
         self.EndEffectorMO2 = kwargs['EndEffectorMO2']        
 
@@ -47,11 +49,12 @@ class Controller(Sofa.Core.Controller):
         
     def save_end_effector_data(self, time):
         position = self.EndEffectorMO.position.value
-        position_2 = self.EndEffectorMO2.position.value
+        position2 = self.EndEffectorMO2.position.value
+              
         try:
             with open(self.csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],position_2[0][0],position_2[0][1],position_2[0][2]])
+                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],position2[0][0],position2[0][1],position2[0][2]])
         except Exception as e:
             print(f"Error al escribir en archivo csv:{e}")
             
@@ -71,7 +74,8 @@ class Controller(Sofa.Core.Controller):
 
         
     def onAnimateBeginEvent(self, eventType):
-        # print(f"Current End-Effector position: {self.EndEffectorMO.position.value}")        
+        # print(f"Current End-Effector position: {self.EndEffectorMO.position.value}")
+        # print(f"Current End-Effector position_2: {self.EndEffectorMO2.position.value}")        
         # print(f"pressure: {self.Pressure}")
     
         # Aquí obtienes el tiempo actual de la simulación
@@ -147,7 +151,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 1
+                rootNode.dt = 0.001
 
 		#cubito
                 cubito = rootNode.addChild('CubitoBarril')
@@ -164,7 +168,7 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17 , -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17 , -13,  13, 21, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
@@ -182,7 +186,7 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 3, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 3, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
                 #cubito.addObject('UncoupledConstraintCorrection')
@@ -242,6 +246,6 @@ def createScene(rootNode):
                 cubitoVisu.addObject("OglModel", src="@loader")
                 cubitoVisu.addObject("BarycentricMapping")
                 
-                rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC,  EndEffectorMO=EndEffectorMO, EndEffectorMO2=EndEffectorMO2))
+                rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC, EndEffectorMO=EndEffectorMO, EndEffectorMO2=EndEffectorMO2 ))
                 
                 return rootNode
