@@ -13,7 +13,7 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
-
+PSI = 7
 
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
@@ -30,10 +30,10 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 500 #Pa
+        self.Maxpressure = 6.89 * PSI # PSI to KPa
+        self.Increment = self.Maxpressure/500 #KPa
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 40000 #Pa
         self.EndEffectorMO = kwargs['EndEffectorMO']
         
         # Definir ruta de archivo csv 
@@ -148,7 +148,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 1
+                rootNode.dt = 0.001
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
@@ -165,11 +165,11 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 18.5, -13,  13, 20.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 125000
+                YM1 = 148500
                 YM2 = YM1*100
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
@@ -183,7 +183,7 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
                 #cubito.addObject('UncoupledConstraintCorrection')
