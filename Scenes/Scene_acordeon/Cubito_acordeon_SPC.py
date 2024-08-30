@@ -29,10 +29,10 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 0.2
+        self.Maxpressure = 6.89 * PSI  #Pa 
+        self.Increment = self.Maxpressure/500
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 6.89 * PSI  #Pa
         self.EndEffectorMO = kwargs['EndEffectorMO']      
 
         # Definir ruta de archivo csv 
@@ -49,13 +49,22 @@ class Controller(Sofa.Core.Controller):
     def save_end_effector_data(self, time):
         position = self.EndEffectorMO.position.value
         
-        SecondPointCoord = self.EndEffectorMO.position.value[2]
-        Angle = np.rad2deg(np.arctan2(SecondPointCoord[0],SecondPointCoord[1]))
+        PointA = position[0]
+        PointB = position[1]
+        
+        delta_x = PointB[0] - PointA[0]
+        delta_y = PointB[1] - PointA[1]
+        delta_z = PointB[2] - PointA[2]
+        
+        Angle = np.rad2deg(np.arctan2(delta_y, delta_x))
+        
+        # SecondPointCoord = self.EndEffectorMO.position.value[1]
+        # Angle = np.rad2deg(np.arctan2(SecondPointCoord[1],SecondPointCoord[0]))
         
         try:
             with open(self.csv_file_path, mode='a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([time,self.Pressure,position[0][0],position[0][1],position[0][2],Angle])
+                writer.writerow([time,self.Pressure,PointA[0],PointA[1],PointA[2],Angle])
         except Exception as e:
             print(f"Error al escribir en archivo csv:{e}")
             
@@ -169,7 +178,7 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 18.5, -13,  13, 20.5, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
@@ -187,7 +196,7 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
                 #cubito.addObject('UncoupledConstraintCorrection')

@@ -16,9 +16,14 @@ Pressure = df['Pressure'].values
 x = df['Position_X'].values
 y = df['Position_Y'].values
 z = df['Position_Z'].values
+Angle = df['Angle'].values
+
+y_adjusted = y - y[0]
+Pressure_PSI = Pressure/6.89
+Neg_Angle = -Angle
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure, y , marker='o')
+plt.plot(Pressure_PSI, y_adjusted , marker='o')
 
 plt.ylabel('Eje Z')
 plt.xlabel('Pressure')
@@ -30,13 +35,13 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure, z, marker='o')
+plt.plot(Pressure_PSI, Neg_Angle, marker='o')
 
-plt.ylabel('Eje X')
+plt.ylabel('Angle')
 plt.xlabel('Pressure')
-plt.title('Relación entre el eje X y la presión')
+plt.title('Inclinacion del módulo')
 
-plt.savefig('despla_X_presion.png', dpi=300)
+plt.savefig('Angle_presion.png', dpi=300)
 
 plt.grid(True)
 plt.show()

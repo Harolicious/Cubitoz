@@ -18,13 +18,15 @@ y = df['Position_Y'].values
 z = df['Position_Z'].values
 Angle = df['Angle'].values
 Angle = -Angle
+Pressure_PSI = Pressure/6.89
+
 
 plt.figure(figsize=(10, 6))
-plt.plot(Angle, Pressure, marker='o')
+plt.plot(Pressure_PSI, Angle, marker='o')
 
-plt.xlabel('Angle')
-plt.ylabel('Pressure')
-plt.title('Relación entre el ángulo y la presión')
+plt.ylabel('Angle')
+plt.xlabel('Pressure')
+plt.title('Rotacion del módulo rotatorio')
 
 plt.savefig('Angulo_presion.png', dpi=300)
 
