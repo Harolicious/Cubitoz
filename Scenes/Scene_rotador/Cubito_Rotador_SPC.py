@@ -83,14 +83,14 @@ class Controller(Sofa.Core.Controller):
         
     def onAnimateBeginEvent(self, eventType):
         # print(f"Current End-Effector position: {self.EndEffectorMO.position.value}")        
-        print(f"pressure: {self.Pressure}")
+        # print(f"pressure: {self.Pressure}")
     
         # Aquí obtienes el tiempo actual de la simulación
         current_time = self.RootNode.time.value
         
         # Imprimir mensaje si la animación ha terminado
         if self.animation_finished:
-            print("animación terminada")
+            # print("animación terminada")
             self.RootNode.dt = 0 
             self.Pressure = 0
             return

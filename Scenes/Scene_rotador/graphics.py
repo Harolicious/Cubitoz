@@ -19,16 +19,25 @@ z = df['Position_Z'].values
 Angle = df['Angle'].values
 Angle = -Angle
 Pressure_PSI = Pressure/6.89
-
+y_ajust = y - y[0]
 
 plt.figure(figsize=(10, 6))
 plt.plot(Pressure_PSI, Angle, marker='o')
 
-plt.ylabel('Angle')
-plt.xlabel('Pressure')
-plt.title('Rotacion del módulo rotatorio')
+plt.ylabel('Angle (degrees)')
+plt.xlabel('Pressure (PSI)')
+plt.title('Rotación del módulo variando la presión')
 
 plt.savefig('Angulo_presion.png', dpi=300)
+
+plt.figure(figsize=(10, 6))
+plt.plot(Pressure_PSI, y_ajust, marker='o')
+
+plt.ylabel('Axis Z (mm)')
+plt.xlabel('Pressure (PSI)')
+plt.title('Desplazamiento en Z variando la presión')
+
+plt.savefig('desplazamiento_presion_rotator.png', dpi=300)
 
 plt.grid(True)
 plt.show()
