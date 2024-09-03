@@ -121,7 +121,6 @@ CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0, 0, Al
 DimTagCylinder = (3, CylinderTag)
 
 gmsh.model.occ.synchronize()
-defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 gmsh.write("CubitoESS_Cavity_1.stl")
@@ -137,7 +136,6 @@ DimTagCylinder = (3, CylinderTag)
 DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, 3*LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
 gmsh.model.occ.synchronize()
-defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 gmsh.write("CubitoESS_Cavity_2.stl")
@@ -153,7 +151,6 @@ DimTagCylinder = (3, CylinderTag)
 DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, 5*LadoCubo/2, 0, 1, 0, 0, -np.pi/4)
 
 gmsh.model.occ.synchronize()
-defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 gmsh.write("CubitoESS_Cavity_3.stl")
@@ -174,9 +171,7 @@ DimTagBox3 = (3, BoxTag3)
 
 FusionOut = gmsh.model.occ.fuse([(DimTagBox1),(DimTagBox3)], [(DimTagBox2)])
 
-
 gmsh.model.occ.synchronize()
-defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 
