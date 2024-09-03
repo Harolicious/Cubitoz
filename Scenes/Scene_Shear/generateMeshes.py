@@ -10,6 +10,7 @@ import gmsh
 import numpy as np
 import Constants
 from defineMeshSizes import defineMeshSizes
+from meshembed import meshembed
 
 gmsh.initialize()
  
@@ -25,8 +26,9 @@ CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, Alt
 DimTagCylinder = (3, CylinderTag)
 DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
-
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
+
+meshembed(LadoCubo, 1, 0.001, BoxTag)
 
 gmsh.model.occ.synchronize()
 

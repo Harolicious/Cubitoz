@@ -13,6 +13,7 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
+PSI = 7
 
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
@@ -34,14 +35,16 @@ class Controller(Sofa.Core.Controller):
         # Inicializar atributos con valores de kwargs
         self.RootNode = kwargs['RootNode']
         self.SPC = kwargs['SPC']
-        self.Increment = 500
+        self.Maxpressure = 6.89 * PSI #Pa
+        self.Increment = self.Maxpressure/500
         self.Pressure = 0        
         self.Decreasing = False
-        self.Maxpressure = 45000 #Pa
+ 
         self.EndEffectorMO = kwargs['EndEffectorMO']
         
         # Definir ruta de archivo csv 
         self.csv_file_path = "end_effector_data_Shear.csv"
+
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -154,14 +157,12 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 1
+                rootNode.dt = 0.001
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
-                
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
-
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
                 Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoShear.vtk')
@@ -171,7 +172,7 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-15, 18, -15,  15, 21, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-15, 18, -15,  15, 20.5, 15], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
@@ -189,7 +190,7 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-15, -1, -15,  15, 2, 15], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('BoxROI', name='boxROI', box=[-15, -0.5, -15,  15, 2, 15], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
                 #cubito.addObject('UncoupledConstraintCorrection')
@@ -245,8 +246,7 @@ def createScene(rootNode):
                 FiberNode.addObject("BarycentricMapping")
                 
                 
-		#cubito/cavity
-                
+		#cubito/cavity          
         
                 cavity = cubito.addChild('cavity')
                 cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoShear_Cavity.stl')
