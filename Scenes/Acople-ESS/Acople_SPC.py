@@ -40,12 +40,12 @@ class Controller(Sofa.Core.Controller):
         self.SPC3 = kwargs['SPC'][2]
         self.EndEffectorMO = kwargs['EndEffectorMO']
         self.Maxpressure = PSI *6.89
-        self.Increment = self.Maxpressure/50
+        self.Increment = self.Maxpressure/500
         self.Pressure1 = 0
         self.Pressure2 = 0
         self.Pressure3 = 0
         self.Decreasing = False
-        self.csv_file_path = "end_effector_data.csv"
+        self.csv_file_path = "end_effector_data_ESS.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -190,9 +190,9 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                               
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 38, -13,  13, 42, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                boxROIStiffness2 = cubito.addObject('BoxROI', name='boxROIStiffness2', box=[-13, 18, -13,  13, 22, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                boxROIStiffness3 = cubito.addObject('BoxROI', name='boxROIStiffness3', box=[-13, 58, -13,  13, 61, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 38, -13,  13, 42, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness2 = cubito.addObject('BoxROI', name='boxROIStiffness2', box=[-13, 18, -13,  13, 22, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness3 = cubito.addObject('BoxROI', name='boxROIStiffness3', box=[-13, 58, -13,  13, 61, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 
                 Container.init()
                 MO.init()
@@ -221,8 +221,8 @@ def createScene(rootNode):
                 
                 #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")       
-                cubito.addObject('RestShapeSpringsForceField', points='@boxROI1.indices', stiffness=1e12)       
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")       
+                cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)       
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
 
 

@@ -156,9 +156,7 @@ def createScene(rootNode):
 		#cubito
                 cubito = rootNode.addChild('CubitoBarril')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
-                
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
-
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
                 Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='Cubitobarril.vtk')
