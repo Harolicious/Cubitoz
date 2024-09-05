@@ -37,7 +37,7 @@ plt.legend(['Uniaxial module 1','Shear module 2', 'Shear module 3'])
 
 plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')
-plt.title('Variación de la altura en relación a la presión')
+plt.title('Desplazamiento en Z por cada modulo en relación a su presión')
 
 plt.savefig('despla_Z_ESS.png', dpi=300)
 
@@ -48,11 +48,11 @@ plt.figure(figsize=(10, 6))
 plt.plot(Pressure1_PSI, x_ajust, marker='o')
 plt.plot(Pressure2_PSI, x_ajust, marker='o')
 plt.plot(Pressure3_PSI, x_ajust, marker='o')
-
+plt.legend(['Uniaxial module 1','Shear module 2', 'Shear module 3'])
 
 plt.ylabel('Axis X (mm)')
 plt.xlabel('Pressure (PSI)')
-plt.title('Desplazamiento en X en relación a la presión')
+plt.title('Desplazamiento en X por cada modulo en relación a su presión')
 
 plt.savefig('despla_X_ESS.png', dpi=300)
 
@@ -64,11 +64,11 @@ plt.figure(figsize=(10, 6))
 plt.plot(Pressure1_PSI, z_ajust, marker='o')
 plt.plot(Pressure2_PSI, z_ajust, marker='o')
 plt.plot(Pressure3_PSI, z_ajust, marker='o')
-
+plt.legend(['Uniaxial module 1','Shear module 2', 'Shear module 3'])
 
 plt.ylabel('Axis Y (mm)')
 plt.xlabel('Pressure (PSI)')
-plt.title('Desplazamiento en Y en relación a la presión')
+plt.title('Desplazamiento en Y por cada modulo en relación a su presión')
 
 plt.savefig('despla_Y_ESS.png', dpi=300)
 
