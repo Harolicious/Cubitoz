@@ -25,25 +25,37 @@ y1_ajust = y1 - y1[0]
 Pressure_PSI = Pressure/6.89
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y1_ajust, marker='o')
+plt.plot(Pressure_PSI, y1_ajust, marker=',')
 
-plt.ylabel('Eje Z')
-plt.xlabel('Pressure')
+plt.ylabel('Eje Z (mm)')
+plt.xlabel('Pressure (PSI)')
 plt.title('Relación entre el eje Z y la presión')
 
-plt.savefig('despla_Z_presion.png', dpi=300)
+plt.savefig('despla_Z_presion_biaxial.png', dpi=300)
 
 plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, z2_ajust, marker='o')
+plt.plot(Pressure_PSI, z2_ajust, marker=',')
 
-plt.ylabel('Eje X')
-plt.xlabel('Pressure')
+plt.ylabel('Eje X (mm)')
+plt.xlabel('Pressure (PSI)')
 plt.title('Desplazamiento Biaxial')
 
-plt.savefig('despla_X_presion.png', dpi=300)
+plt.savefig('despla_X_presion_biaxial.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(Time, Pressure_PSI, marker=',')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Pressure (PSI)')
+plt.title('Presión a lo largo de la simulación')
+
+plt.savefig('Pressure_time_biaxial.png', dpi=300)
 
 plt.grid(True)
 plt.show()

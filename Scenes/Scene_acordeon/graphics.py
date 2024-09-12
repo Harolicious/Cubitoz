@@ -23,25 +23,37 @@ Pressure_PSI = Pressure/6.89
 Neg_Angle = -Angle
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_adjusted , marker='o')
+plt.plot(Pressure_PSI, y_adjusted , marker=',')
 
-plt.ylabel('Eje Z')
-plt.xlabel('Pressure')
+plt.ylabel('Eje Z (mm)')
+plt.xlabel('Pressure (PSI)')
 plt.title('Relación entre el eje Z y la presión')
 
-plt.savefig('despla_Z_presion.png', dpi=300)
+plt.savefig('despla_Z_presion_tilt.png', dpi=300)
 
 plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, Neg_Angle, marker='o')
+plt.plot(Pressure_PSI, Neg_Angle, marker=',')
 
-plt.ylabel('Angle')
-plt.xlabel('Pressure')
-plt.title('Inclinacion del módulo')
+plt.ylabel('Angle (degrees)')
+plt.xlabel('Pressure (PSI)')
+plt.title('Inclinación angular del módulo')
 
-plt.savefig('Angle_presion.png', dpi=300)
+plt.savefig('Angle_presion_tilt.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(Time, Pressure_PSI, marker=',')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Pressure (PSI)')
+plt.title('Presión a lo largo de la simulación')
+
+plt.savefig('Pressure_time_tilt.png', dpi=300)
 
 plt.grid(True)
 plt.show()

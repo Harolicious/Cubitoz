@@ -22,22 +22,34 @@ Pressure_PSI = Pressure/6.89
 y_ajust = y - y[0]
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, Angle, marker='o')
+plt.plot(Pressure_PSI, Angle, marker=',')
 
 plt.ylabel('Angle (degrees)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Rotación del módulo variando la presión')
 
-plt.savefig('Angulo_presion.png', dpi=300)
+plt.savefig('Angulo_presion_rotator.png', dpi=300)
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_ajust, marker='o')
+plt.plot(Pressure_PSI, y_ajust, marker=',')
 
 plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Desplazamiento en Z variando la presión')
 
 plt.savefig('desplazamiento_presion_rotator.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(Time, Pressure_PSI, marker=',')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Pressure (PSI)')
+plt.title('Presión a lo largo de la simulación')
+
+plt.savefig('Pressure_time_rotator.png', dpi=300)
 
 plt.grid(True)
 plt.show()

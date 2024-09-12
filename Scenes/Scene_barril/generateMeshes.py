@@ -28,12 +28,12 @@ DimTagCylinder = (3, CylinderTag)
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
 
-meshembed(LadoCubo, 1.5, 0.001, BoxTag)
+meshembed(LadoCubo, 1, 0.001, BoxTag)
 
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(2)
+defineMeshSizes(1.2)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("Cubitobarril.vtk")

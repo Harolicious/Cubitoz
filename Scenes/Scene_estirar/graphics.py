@@ -21,13 +21,25 @@ y_adjusted = y - y[0]
 Pressure_PSI = Pressure/6.89
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_adjusted, marker='o')
+plt.plot(Pressure_PSI, y_adjusted, marker=',')
 
-plt.ylabel('Axis Z mm')
-plt.xlabel('Pressure PSI')
-plt.title('Desplazamiento vs Presión')
+plt.ylabel('Axis Z (mm)')
+plt.xlabel('Pressure (PSI)')
+plt.title('Relación entre el desplazamiento en Z y la presión')
 
 plt.savefig('DesplaZ_presion_uniaxial.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(Time, Pressure_PSI, marker=',')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Pressure PSI')
+plt.title('Presión a lo largo de la simulación')
+
+plt.savefig('Pressure_time_uniaxial.png', dpi=300)
 
 plt.grid(True)
 plt.show()

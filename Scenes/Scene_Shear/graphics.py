@@ -23,25 +23,37 @@ Pressure_PSI = Pressure/6.89
 
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_ajust, marker='o')
+plt.plot(Pressure_PSI, y_ajust, marker=',')
 
 plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Variación de la altura en relación a la presión')
 
-plt.savefig('despla_Z_presion.png', dpi=300)
+plt.savefig('despla_Z_presion_shear.png', dpi=300)
 
 plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, x_ajust, marker='o')
+plt.plot(Pressure_PSI, x_ajust, marker=',')
 
 plt.ylabel('Axis X (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Desplazamiento en X en relación a la presión')
 
-plt.savefig('despla_Y_presion.png', dpi=300)
+plt.savefig('despla_Y_presion_shear.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(Time, Pressure_PSI, marker=',')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Pressure PSI')
+plt.title('Presión a lo largo de la simulación')
+
+plt.savefig('Pressure_time_shear.png', dpi=300)
 
 plt.grid(True)
 plt.show()
