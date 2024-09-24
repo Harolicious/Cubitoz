@@ -17,12 +17,23 @@ x = df['Position_X'].values
 y = df['Position_Y'].values
 z = df['Position_Z'].values
 Angle = df['Angle'].values
+
 Angle = -Angle
 Pressure_PSI = Pressure/6.89
-y_ajust = y - y[0]
+y_ad = y - y[0]
+
+mid = int(len(Time)/2)
+y_ad_up= y_ad[:mid]
+y_ad_down = y_ad[mid:]
+Angle_up= Angle[:mid]
+Angle_down = Angle[mid:]
+Pressure_PSI_up = Pressure_PSI[:mid]
+Pressure_PSI_down = Pressure_PSI[mid:]
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, Angle, marker=',')
+plt.plot(Pressure_PSI_up, Angle_up, marker=',', color='blue')
+plt.plot(Pressure_PSI_down, Angle_down, marker=',', color='green')
+plt.legend(['Angle Inflated', 'Angle Deflated'])
 
 plt.ylabel('Angle (degrees)')
 plt.xlabel('Pressure (PSI)')
@@ -30,8 +41,13 @@ plt.title('Rotación del módulo variando la presión')
 
 plt.savefig('Angulo_presion_rotator.png', dpi=300)
 
+plt.grid(True)
+plt.show()
+
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_ajust, marker=',')
+plt.plot(Pressure_PSI_up, y_ad_up , marker=',', color='blue')
+plt.plot(Pressure_PSI_down, y_ad_down , marker=',', color='green')
+plt.legend(['Strain Z Inflated', 'Strain Z Deflated'])
 
 plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')

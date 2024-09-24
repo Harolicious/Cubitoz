@@ -17,11 +17,20 @@ x = df['Position_X'].values
 y = df['Position_Y'].values
 z = df['Position_Z'].values
 
-y_adjusted = y - y[0]
+y_ad = y - y[0]
 Pressure_PSI = Pressure/6.89
 
+mid = int(len(Time)/2)
+y_ad_up= y_ad[:mid]
+y_ad_down = y_ad[mid:]
+Pressure_PSI_up = Pressure_PSI[:mid]
+Pressure_PSI_down = Pressure_PSI[mid:]
+
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_adjusted, marker=',')
+plt.plot(Pressure_PSI_up, y_ad_up , marker=',', color='blue')
+plt.plot(Pressure_PSI_down, y_ad_down , marker=',', color='green')
+plt.legend(['Strain Z Inflated', 'Strain Z Deflated'])
+
 
 plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')

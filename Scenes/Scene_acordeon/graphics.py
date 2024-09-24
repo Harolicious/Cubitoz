@@ -18,14 +18,26 @@ y = df['Position_Y'].values
 z = df['Position_Z'].values
 Angle = df['Angle'].values
 
-y_adjusted = y - y[0]
+
+y_ad = y - y[0]
 Pressure_PSI = Pressure/6.89
 Neg_Angle = -Angle
 
-plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y_adjusted , marker=',')
+mid = int(len(Time)/2)
+y_ad_up= y_ad[:mid]
+y_ad_down = y_ad[mid:]
+Pressure_PSI_up = Pressure_PSI[:mid]
+Pressure_PSI_down = Pressure_PSI[mid:]
+Neg_Angle_up = Neg_Angle[:mid]
+Neg_Angle_down = Neg_Angle[mid:]
 
-plt.ylabel('Eje Z (mm)')
+
+plt.figure(figsize=(10, 6))
+plt.plot(Pressure_PSI_up, y_ad_up , marker=',', color='blue')
+plt.plot(Pressure_PSI_down, y_ad_down , marker=',', color='green')
+plt.legend(['Strain Z Inflated', 'Strain Z Deflated'])
+
+plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Relación entre el eje Z y la presión')
 
@@ -35,7 +47,9 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, Neg_Angle, marker=',')
+plt.plot(Pressure_PSI_up, Neg_Angle_up, marker=',' ,color='blue')
+plt.plot(Pressure_PSI_down, Neg_Angle_down, marker=',', color='green')
+plt.legend(['Angle Inflated', 'Angle Deflated'])
 
 plt.ylabel('Angle (degrees)')
 plt.xlabel('Pressure (PSI)')

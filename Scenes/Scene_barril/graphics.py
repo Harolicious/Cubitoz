@@ -20,14 +20,24 @@ x2 = df['P2_Position_X'].values
 y2 = df['P2_Position_Y'].values
 z2 = df['P2_Position_Z'].values
 
-z2_ajust = z2 - z2[0] 
-y1_ajust = y1 - y1[0] 
+z2_ad = z2 - z2[0] 
+y1_ad = y1 - y1[0] 
 Pressure_PSI = Pressure/6.89
 
-plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, y1_ajust, marker=',')
+mid = int(len(Time)/2)
+z2_ad_up= z2_ad[:mid]
+z2_ad_down = z2_ad[mid:]
+y1_ad_up= y1_ad[:mid]
+y1_ad_down = y1_ad[mid:]
+Pressure_PSI_up = Pressure_PSI[:mid]
+Pressure_PSI_down = Pressure_PSI[mid:]
 
-plt.ylabel('Eje Z (mm)')
+plt.figure(figsize=(10, 6))
+plt.plot(Pressure_PSI_up, y1_ad_up , marker=',', color='blue')
+plt.plot(Pressure_PSI_down, y1_ad_down , marker=',', color='green')
+plt.legend(['Strain Z Inflated', 'Strain Z Deflated'])
+
+plt.ylabel('Axis Z (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Relación entre el eje Z y la presión')
 
@@ -37,9 +47,11 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Pressure_PSI, z2_ajust, marker=',')
+plt.plot(Pressure_PSI_up, z2_ad_up , marker=',', color='blue')
+plt.plot(Pressure_PSI_down, z2_ad_down , marker=',', color='green')
+plt.legend(['Strain X Inflated', 'Strain X Deflated'])
 
-plt.ylabel('Eje X (mm)')
+plt.ylabel('Axis X (mm)')
 plt.xlabel('Pressure (PSI)')
 plt.title('Desplazamiento Biaxial')
 
