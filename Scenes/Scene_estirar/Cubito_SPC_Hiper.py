@@ -148,47 +148,32 @@ def createScene(rootNode):
                 )
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
+                rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Container.Grid')
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
                 rootNode.dt = 0.001
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
-                cubito.addObject('EulerImplicitSolver', name='odesolver')
-                
+                cubito.addObject('EulerImplicitSolver', name="cg_odesolver", printLog="false")
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
-
-                cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
-
+                cubito.addObject('CGLinearSolver', iterations="25", name="linear solver", tolerance="1.0e-9", threshold="1.0e-9")
+                cubito.addObject('RegularGridTopology', name="hexaGrid", min="0 0 0", max="1 1 2.7", n="3 3 8", p0="8 0 0")
                 Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoEstirar.vtk')
-                Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
-                cubito.addObject('TetrahedronSetTopologyModifier')
-
-                MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
-                cubito.addObject('UniformMass', totalMass=0.5)
+                cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
+                cubito.addObject('MeshMatrixMass', totalMass="1.0")
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 18.5, -13,  13, 20.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                Container.init()
-                MO.init()
-                boxROIStiffness.init()
-                YM1 = 148500
-                YM2 = YM1*100
-                YMArray = np.ones(len(Loader.tetras))*YM1
-                IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
-                YMArray[IdxElementsInROI] = YM2
-                print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
                 
-                print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
+                cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
+                cubito.addObject('TetrahedronSetTopologyModifier', name='Modifier')
+                cubito.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3", name="GeomAlgo")
+                cubito.addObject('Hexa2TetraTopologicalMapping', name="default28", input="@../", output="@container", printLog="0")
+                cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="5000 7000 10", materialName="MooneyRivlin")
                 
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
-
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
-                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                #cubito.addObject('UncoupledConstraintCorrection')
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes="1", tetrahedra="@container.tetrahedra")
+                cubito.addObject('FixedProjectiveConstraint', indices="@box.indices")
+                # cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
+                # cubito.addObject('UncoupledConstraintCorrection')
                 
         # Punto "End-effector"
                 

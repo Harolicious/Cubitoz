@@ -24,6 +24,8 @@ Pressure_PSI = Pressure/6.89
 Neg_Angle = -Angle
 
 mid = int(len(Time)/2)
+Time_up = Time[:mid]
+Time_down = Time[mid:]
 y_ad_up= y_ad[:mid]
 y_ad_down = y_ad[mid:]
 Pressure_PSI_up = Pressure_PSI[:mid]
@@ -61,7 +63,9 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(Time, Pressure_PSI, marker=',')
+plt.plot(Time_up, Pressure_PSI_up, marker=',' ,color='blue')
+plt.plot(Time_down, Pressure_PSI_down, marker=',', color='green')
+plt.legend(['Inflated', 'Deflated'])
 
 plt.xlabel('Time (s)')
 plt.ylabel('Pressure (PSI)')

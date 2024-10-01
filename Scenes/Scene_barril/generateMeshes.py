@@ -33,7 +33,7 @@ meshembed(LadoCubo, 1, 0.001, BoxTag)
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(1.8)
+defineMeshSizes(1.9)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("Cubitobarril.vtk")
@@ -45,7 +45,7 @@ CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0, 0, Al
 DimTagCylinder = (3, CylinderTag)
 
 gmsh.model.occ.synchronize()
-defineMeshSizes(1.8)
+defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 gmsh.write("Cubitobarril_Cavity.stl")
@@ -60,6 +60,7 @@ DimTagBox1 = (3, Box1Tag)
 gmsh.model.occ.synchronize()
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
+
 
 gmsh.write("Cubito_barril_visu.stl")
 
