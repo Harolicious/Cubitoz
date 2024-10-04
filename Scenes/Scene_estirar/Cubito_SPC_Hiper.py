@@ -194,8 +194,7 @@ def createScene(rootNode):
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
                 YMArray[IdxElementsInROI] = YM2
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.47,  youngModulus = YM2) #,initialPoints= IdxElementsInROI.tolist())
-                # cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEMhyper", ParameterSet="1000000 243600 1.17138", materialName="Ogden") # k u a -----  k = 1MPa , u = 0.02436 MPa , a = 1.17138
+                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.47,  youngModulus = YMArray.flatten().tolist(), initialPoints=IdxElementsInROI.tolist())
                 
                 cubito.addObject('BoxROI', name='boxROIcubito', box=[-13, 1.5, -13,  13, 20.5, 13], drawBoxes=1, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEMhyper", ParameterSet="890 8000 0.6666", materialName="MooneyRivlin") #C01, C10, k0 --- 0.008 0.00089
