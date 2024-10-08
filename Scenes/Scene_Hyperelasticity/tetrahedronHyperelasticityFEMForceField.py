@@ -104,23 +104,26 @@ def createScene(root_node):
    tetras.addObject('TetrahedronSetTopologyModifier', name="Modifier")
    tetras.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3", name="GeomAlgo")
    tetras.addObject('Hexa2TetraTopologicalMapping', name="default28", input="@../", output="@Container", printLog="0")
-   tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="48000 152000 0.666", materialName="MooneyRivlin")
+   # tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="48000 152000 0.666", materialName="MooneyRivlin") #
+   tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="3602.5 9694.5 0.666", materialName="MooneyRivlin") # C01 C10 k0 ---- C01 0.0036025 MPa C10 0.0096945 MPa
    MooneyRivlin.addObject('BoxROI', drawBoxes="1", box="8 0 0 9 1 0.05", name="box")
    MooneyRivlin.addObject('FixedConstraint', indices="@box.indices")
    MooneyRivlin.addObject('Visual3DText', text="MooneyRivlin", position="9 0 -0.5", scale="0.2")
    
-   # Ogden = root.addChild('Ogden')
-   # Ogden.addObject('EulerImplicitSolver', name="cg_odesolver", printLog="false")
-   # Ogden.addObject('CGLinearSolver', iterations="25", name="linear solver", tolerance="1.0e-9", threshold="1.0e-9")
-   # Ogden.addObject('RegularGridTopology', name="hexaGrid", min="0 0 0", max="1 1 2.7", n="3 3 8", p0="10 0 0")
-   # Ogden.addObject('MechanicalObject', name="mechObj")
-   # Ogden.addObject('MeshMatrixMass', totalMass="1.0")
-   # tetras = Ogden.addChild('tetras')
-   # tetras.addObject('TetrahedronSetTopologyContainer', name="Container")
-   # tetras.addObject('TetrahedronSetTopologyModifier', name="Modifier")
-   # tetras.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3", name="GeomAlgo")
-   # tetras.addObject('Hexa2TetraTopologicalMapping', name="default28", input="@../", output="@Container", printLog="0")
-   # tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="1000000 243600 1.17138", materialName="Ogden") # k u a -----  k = 1MPa , u = 0.02436 MPa , a = 1.17138
-   # Ogden.addObject('BoxROI', drawBoxes="1", box="10 0 0 11 1 0.05", name="box")
-   # Ogden.addObject('FixedConstraint', indices="@box.indices")
-   # Ogden.addObject('Visual3DText', text="Ogden", position="11 0 -0.5", scale="0.2")
+   Ogden = root.addChild('Ogden')
+   Ogden.addObject('EulerImplicitSolver', name="cg_odesolver", printLog="false")
+   Ogden.addObject('CGLinearSolver', iterations="25", name="linear solver", tolerance="1.0e-9", threshold="1.0e-9")
+   Ogden.addObject('RegularGridTopology', name="hexaGrid", min="0 0 0", max="1 1 2.7", n="3 3 8", p0="10 0 0")
+   Ogden.addObject('MechanicalObject', name="mechObj")
+   Ogden.addObject('MeshMatrixMass', totalMass="1.0")
+   tetras = Ogden.addChild('tetras')
+   tetras.addObject('TetrahedronSetTopologyContainer', name="Container")
+   tetras.addObject('TetrahedronSetTopologyModifier', name="Modifier")
+   tetras.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3", name="GeomAlgo")
+   tetras.addObject('Hexa2TetraTopologicalMapping', name="default28", input="@../", output="@Container", printLog="0")
+   # tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="5500 1241 3.034", materialName="Ogden") # k u a -----  k = 55 kPa , u = 1.241 kPa , a = 3.034
+   # tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="0.715 22000 1.3", materialName="Ogden") # k u a -----  k = 0.715 kPa , u = 22 kPa , a = 1.3
+   tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="5500 1241 3.034", materialName="Ogden") # k u a -----  k = 55 kPa , u = 1.241 kPa , a = 3.034
+   Ogden.addObject('BoxROI', drawBoxes="1", box="10 0 0 11 1 0.05", name="box")
+   Ogden.addObject('FixedConstraint', indices="@box.indices")
+   Ogden.addObject('Visual3DText', text="Ogden", position="11 0 -0.5", scale="0.2")
