@@ -32,7 +32,7 @@ meshembed(LadoCubo, 1, 0.001, BoxTag)
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(2)
+defineMeshSizes(2.5)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("CubitoEstirar.vtk")

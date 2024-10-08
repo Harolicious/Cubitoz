@@ -191,14 +191,16 @@ def createScene(rootNode):
                 boxROIStiffness.init()
                 YM1 = 148500
                 YM2 = YM1*100
-                YMArray = np.ones(len(Loader.tetras))*YM1
+                YMArray = np.ones(len(Loader.tetras))
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
-                YMArray[IdxElementsInROI] = YM2
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.47,  youngModulus = YMArray.flatten().tolist(), initialPoints=IdxElementsInROI.tolist())
+                YMArray[IdxElementsInROI] = 15000000
+                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.49,  youngModulus = YMArray.flatten().tolist(), initialPoints=IdxElementsInROI)
                 
-                cubito.addObject('BoxROI', name='boxROIcubito', box=[-13, 1.5, -13,  13, 20.5, 13], drawBoxes=1, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEMhyper", ParameterSet="890 8000 0.6666", materialName="MooneyRivlin") #C01, C10, k0 --- 0.008 0.00089
-
+                boxROICubito = cubito.addObject('BoxROI', name='boxROICubito', box=[-13, 1.5, -13,  13, 20.5, 13], drawBoxes=1, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROICubito.init()
+                IdxElementsInROICubito = np.array(boxROICubito.tetrahedronIndices.value)
+                # cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEMhyper", ParameterSet="8900 80000 0.6666", materialName="MooneyRivlin") #C01, C10, k0 --- 0.008 0.00089
+                cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="34480.2759 310340.483", materialName="NeoHookean")
 
                 cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes=1, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
