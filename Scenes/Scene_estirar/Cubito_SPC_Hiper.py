@@ -173,7 +173,7 @@ def createScene(rootNode):
                 boxROIStiffness.init()
                 YM1 = 148500
                 YM2 = YM1*100
-                YMArray = np.ones(len(Loader.tetras))
+                YMArray = np.zeros(len(Loader.tetras))
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
                 YMArray[IdxElementsInROI] = 15000000
                 cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.49,  youngModulus = YMArray.flatten().tolist(), initialPoints=IdxElementsInROI)

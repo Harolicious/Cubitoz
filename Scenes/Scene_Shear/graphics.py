@@ -58,6 +58,20 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 6))
+plt.plot(x_ad_up, y_ad_up, marker=',', color='blue')
+plt.plot(x_ad_down,y_ad_down , marker=',', color='green')
+plt.legend(['Strain X Inflated', 'Strain X Deflated'])
+
+plt.ylabel('Axis Z (mm)')
+plt.xlabel('Axis X (mm)')
+plt.title('Desplazamiento en X en relación a la presión')
+
+plt.savefig('despla_XZ_presion_shear.png', dpi=300)
+
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
 plt.plot(Time, Pressure_PSI, marker=',')
 
 plt.xlabel('Time (s)')

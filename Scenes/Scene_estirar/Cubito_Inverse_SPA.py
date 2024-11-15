@@ -138,7 +138,7 @@ def createScene(rootNode):
                             
                 FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e7)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e12)
                 FiberNode.addObject("BarycentricMapping")
                 
 		#cubito/cavity

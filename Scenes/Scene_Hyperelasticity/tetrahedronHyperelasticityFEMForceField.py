@@ -105,7 +105,7 @@ def createScene(root_node):
    tetras.addObject('TetrahedronSetGeometryAlgorithms', template="Vec3", name="GeomAlgo")
    tetras.addObject('Hexa2TetraTopologicalMapping', name="default28", input="@../", output="@Container", printLog="0")
    # tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="48000 152000 0.666", materialName="MooneyRivlin") #
-   tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="3602.5 9694.5 0.666", materialName="MooneyRivlin") # C01 C10 k0 ---- C01 0.0036025 MPa C10 0.0096945 MPa
+   tetras.addObject('TetrahedronHyperelasticityFEMForceField', name="FEM", ParameterSet="3602.5 9694.5 0.1", materialName="MooneyRivlin") # C01 C10 k0 ---- C01 0.0036025 MPa C10 0.0096945 MPa
    MooneyRivlin.addObject('BoxROI', drawBoxes="1", box="8 0 0 9 1 0.05", name="box")
    MooneyRivlin.addObject('FixedConstraint', indices="@box.indices")
    MooneyRivlin.addObject('Visual3DText', text="MooneyRivlin", position="9 0 -0.5", scale="0.2")

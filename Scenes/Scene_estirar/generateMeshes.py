@@ -25,7 +25,6 @@ DimTagBox = (3, BoxTag)
 
 CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder = (3, CylinderTag)
-
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
 meshembed(LadoCubo, 1, 0.001, BoxTag)

@@ -95,6 +95,7 @@ class Controller(Sofa.Core.Controller):
             self.Pressure3 = 0
             return
         
+        
         if not self.animation_finished:
             # Guardar datos del EndEffector
             self.save_end_effector_data(current_time)
@@ -256,7 +257,7 @@ def createScene(rootNode):
                 
                 FiberNode.addObject("Mesh", position=Points, name="Mesh_estirar", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e7)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
                 FiberNode.addObject("BarycentricMapping")
                 
 #############Shear 
