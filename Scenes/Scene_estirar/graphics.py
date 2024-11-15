@@ -9,7 +9,7 @@ Created on Tue Aug 20 18:08:37 2024
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('end_effector_data_Estirar_hyper.csv')
+df = pd.read_csv('end_effector_data_Estirar_hyper4.csv')
 
 Time = df['Time'].values
 Pressure = df['Pressure'].values
