@@ -1,6 +1,6 @@
 ### Cubitoz
 
-##En este repositorio se encuentra todas la scenes creadas para cada robot modular blando.
+En este repositorio se encuentra todas la scenes creadas para cada robot modular blando.
 
 Como Ejemplo se presenta la rotacion de un módulo.
 
