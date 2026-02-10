@@ -27,7 +27,7 @@ CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, Alt
 DimTagCylinder = (3, CylinderTag)
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
-meshembed(LadoCubo, 1, 0.001, BoxTag)
+meshembed(LadoCubo, 1, 0.1, BoxTag)
 
 gmsh.model.occ.synchronize()
 
@@ -61,6 +61,8 @@ gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 
 gmsh.write("Cubito_Estirar_visu.stl")
+gmsh.fltk.run()
+
 
 gmsh.clear()
 gmsh.finalize()

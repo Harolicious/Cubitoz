@@ -12,9 +12,9 @@ import os
 import csv
 import numpy as np
 
-PSI = 6.5
-
 LadoCubo = Constants.LadoCubo
+PSI = 7.4
+
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
 class Controller(Sofa.Core.Controller):   
@@ -37,7 +37,7 @@ class Controller(Sofa.Core.Controller):
         self.EndEffectorMO2 = kwargs['EndEffectorMO2']        
 
         # Definir ruta de archivo csv 
-        self.csv_file_path = "end_effector_data_Barril.csv"
+        self.csv_file_path = "end_effector_data_Barril_YMA.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -133,6 +133,8 @@ def createScene(rootNode):
                     Sofa.Component.Topology.Container.Constant
                     Sofa.Component.Topology.Container.Dynamic
                     Sofa.Component.Visual
+                    Sofa.Component.Topology.Mapping
+                    Sofa.Component.Collision.Geometry
                     Sofa.GL.Component.Rendering3D
                     Sofa.GL.Component.Shader"""
                 )
@@ -151,7 +153,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 0.001
+                rootNode.dt = 0.01
 
 		#cubito
                 cubito = rootNode.addChild('CubitoBarril')
@@ -166,28 +168,28 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17.5 , -13,  13, 20.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-14, 17, -14,  14, 22, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 0.5, -13,  13, 19.5, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 105000
-                YM2 = YM1*100
-                YMArray = np.ones(len(Loader.tetras))*YM1
-                IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
-                YMArray[IdxElementsInROI] = YM2
-                print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
+                boxROIMain.init()
                 
-                print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
-                
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
+                YM_base = 4396.22
+                YM_stiffROI = YM_base*100
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 2.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROI = cubito.addObject('BoxROI', name='boxROI', box=[-14,  -2, -14,  14, 3, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
-                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                #cubito.addObject('UncoupledConstraintCorrection')
+                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')   
+                
+                modelStiff = cubito.addChild('modelStiff')
+                modelStiff.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIStiffness.tetrahedraInROI", name='container')
+                modelStiff.addObject('TetrahedronFEMForceField', template = 'Vec3d', name='FEM_stiff', method='large', poissonRatio=0.45, youngModulus=YM_stiffROI) 
+                
+                modelSubTopo1 = cubito.addChild('modelSubTopo1')
+                modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
+                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3d',  name='FEM_main', method='large', poissonRatio=0.45, youngModulus=YM_base)
 
         # Punto "End-effector"
                 
@@ -204,28 +206,107 @@ def createScene(rootNode):
 
         #cubito/fibers
         
+        
                 FiberNode = cubito.addChild("FiberReinforcementNode")  
                 
-                Density = 15
-                # IncrementAngle = np.pi/Density
-                Radius = 8
-                Repeat = 20
-                Deg = 2*np.pi/Repeat
-                LevelHeight = 13.5
+
+                Density = 6              # discretización vertical
+                CapDensity = 6            # discretización SOLO en tapas
+                Radius = Constants.RadioCilindro
+                Repeat = 16             # potencia de 2
+                LevelHeight = Constants.AlturaCilindro
+                
+                Ymin = 2.5
+                Ymax = Ymin + LevelHeight
+                dy = (Ymax - Ymin) / (Density - 1)
+                
+                half = Repeat // 2
+                
+                # avance angular entre fibras vecinas
+                dTheta_fiber = 2 * np.pi / Repeat
+                
+                # giro por nivel: fibra j → j+2
+                dTheta_level = (2 * dTheta_fiber) / (Density - 1)
+                
                 Points = []
                 Edges = []
-                for i in range(Density):
-                    for j in range (0,Repeat):
-                        Angle = 0
-                        Coords = [Radius*np.cos(Angle+Deg*j), 3.5+i/Density*LevelHeight, Radius*np.sin(Angle+Deg*j)]
-                        Points.append(Coords)
-                        if i*Repeat+j+Repeat+1<=Repeat*Density:
-                            Edges.append([i*Repeat+j,i*Repeat+j+Repeat])
-                        
+                
+
+                offset_pos = 0  # para indexado posterior
+                
+                for j in range(Repeat):
+                
+                    theta0 = j * dTheta_fiber
+                
+                    for i in range(Density):
+                
+                        theta = theta0 + i * dTheta_level
+                        y = Ymin + i * dy
+                
+                        idx = len(Points)
+                
+                        x = Radius * np.cos(theta)
+                        z = Radius * np.sin(theta)
+                
+                        Points.append([x, y, z])
+                
+                        if i < Density - 1:
+                            Edges.append([idx, idx + 1])
+                
+
+                offset_neg = len(Points)
+                
+                for j in range(Repeat):
+                
+                    theta0 = j * dTheta_fiber
+                
+                    for i in range(Density):
+                
+                        theta = theta0 - i * dTheta_level
+                        y = Ymin + i * dy
+                
+                        idx = len(Points)
+                
+                        x = Radius * np.cos(theta)
+                        z = Radius * np.sin(theta)
+                
+                        Points.append([x, y, z])
+                
+                        if i < Density - 1:
+                            Edges.append([idx, idx + 1])
+                
+
+                def add_cap_connections(offset, level_i):
+                
+                    for j in range(half):
+                
+                        # nodos extremos de fibras opuestas
+                        idx1 = offset + j * Density + level_i
+                        idx2 = offset + (j + half) * Density + level_i
+                
+                        p1 = np.array(Points[idx1])
+                        p2 = np.array(Points[idx2])
+                
+                        cap_idx = []
+                
+                        for k in range(CapDensity + 1):
+                            alpha = k / CapDensity
+                            p = (1 - alpha) * p1 + alpha * p2
+                            cap_idx.append(len(Points))
+                            Points.append(p.tolist())
+                
+                        for k in range(CapDensity):
+                            Edges.append([cap_idx[k], cap_idx[k + 1]])
+                
+                
+                # hélice positiva
+                add_cap_connections(offset_pos, 0)               # tapa inferior
+                add_cap_connections(offset_pos, Density - 1)     # tapa superior
+    
                 
                 FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=5e5)
                 FiberNode.addObject("BarycentricMapping")
                
 		#cubito/cavity

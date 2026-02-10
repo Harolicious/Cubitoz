@@ -18,6 +18,7 @@ LadoCubo = Constants.LadoCubo
 AlturaCilindro = Constants.AlturaCilindro
 RadioCilindro = Constants.RadioCilindro
 
+
 BoxTag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
 DimTagBox = (3, BoxTag)
 
@@ -26,12 +27,11 @@ DimTagCylinder = (3, CylinderTag)
 
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
-meshembed(LadoCubo, 1, 0.001, BoxTag)
-
+meshembed(LadoCubo, 1, 0.01, BoxTag)
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(2)
+defineMeshSizes(2.5)
 gmsh.model.mesh.generate(3)
 gmsh.write("Cubitoacordeon.vtk")
 gmsh.fltk.run()
@@ -52,7 +52,6 @@ gmsh.fltk.run()
 
 Box1Tag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
 DimTagBox1 = (3, Box1Tag)
-
 
 gmsh.model.occ.synchronize()
 gmsh.model.mesh.generate(2)

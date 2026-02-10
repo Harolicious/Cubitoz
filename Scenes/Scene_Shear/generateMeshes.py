@@ -3,7 +3,7 @@
 """
 Created on Thu Oct 26 14:02:25 2023
 
-@author: stefan
+@author: lab
 """
 
 import gmsh
@@ -28,11 +28,11 @@ DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, LadoCubo/2, 0, 0, 0,
 
 Cutout = gmsh.model.occ.cut([DimTagBox], [DimTagCylinder])
 
-meshembed(LadoCubo, 1, 0.001, BoxTag)
+meshembed(LadoCubo, 1, 0.01, BoxTag)
 
 gmsh.model.occ.synchronize()
 
-defineMeshSizes(2)
+defineMeshSizes(2.5)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
 gmsh.write("CubitoShear.vtk")

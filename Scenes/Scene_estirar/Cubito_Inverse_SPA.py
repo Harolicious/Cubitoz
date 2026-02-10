@@ -4,30 +4,6 @@ import os
 import numpy as np
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
-
-class Controller(Sofa.Core.Controller):   
-    
-    def __init__(self, *args, **kwargs):
-        Sofa.Core.Controller.__init__(self, *args, **kwargs)
-        print(" Python::__init__::" + str(self.name.value))
-        
-        self.RootNode = kwargs['RootNode']
-        self.SPA = kwargs['SPA']
-        self.Increment = 0.4
-        self.Pressure = 0
-        print(kwargs['RootNode'])
-    
-        
-        print('Finished Init')
-        
-    def onAnimateBeginEvent(self, eventType):
-        self.Pressure = self.Pressure + self.Increment
-        if self.Pressure > 60 or self.Pressure < 0:
-            # self.Pressure = 550
-            self.Increment = -self.Increment
-        self.SPA.value.value = [self.Pressure]
-        
-        pass
   
 def createScene(rootNode):
 
@@ -55,6 +31,8 @@ def createScene(rootNode):
                     Sofa.Component.Topology.Container.Constant
                     Sofa.Component.Topology.Container.Dynamic
                     Sofa.Component.Visual
+                    Sofa.Component.Collision.Geometry
+                    Sofa.Component.Topology.Mapping
                     Sofa.GL.Component.Rendering3D
                     Sofa.GL.Component.Shader"""
                 )
@@ -70,10 +48,9 @@ def createScene(rootNode):
                         showInteractionForceFields""",
                 )
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
-                rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
-                rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
-                rootNode.dt = 0.001
+                rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=100, tolerance = 0.0000001)
+                rootNode.dt = 0.01
 
         #cubito
                 cubito = rootNode.addChild('cubito')
@@ -90,11 +67,11 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17, -13,  13, 21, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 100000
+                YM1 = 14850
                 YM2 = YM1*100
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
@@ -102,16 +79,13 @@ def createScene(rootNode):
                 print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
                 
                 print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
-                
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.45,  youngModulus=YMArray.flatten().tolist())
+                
+
+                cubito.addObject('BoxROI', name='boxROI', box=[-13, -1, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                #cubito.addObject('UncoupledConstraintCorrection')
                 
 
         #cubito/fibers
@@ -138,7 +112,7 @@ def createScene(rootNode):
                             
                 FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
                 FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e12)
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
                 FiberNode.addObject("BarycentricMapping")
                 
 		#cubito/cavity
@@ -146,7 +120,8 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoEstirar_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPA = cavity.addObject('SurfacePressureActuator', triangles='@topo.triangles')
+                cavity.addObject('SurfacePressureActuator', triangles='@topo.triangles')
+                #SPA = cavity.addObject('SurfacePressureActuator', triangles='@topo.triangles')
                 #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 
@@ -156,7 +131,7 @@ def createScene(rootNode):
                 goal = rootNode.addChild('goal')
                 goal.addObject('EulerImplicitSolver', firstOrder=True)
                 goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
-                goal.addObject('MechanicalObject', name='goalMO', position=[0, 25, 0], showObject=True, showObjectScale=15)
+                goal.addObject('MechanicalObject', name='goalMO', position=[0, 22, 0], showObject=True, showObjectScale=15)
                 goal.addObject('SphereCollisionModel', radius=2.5, group=1)
                 goal.addObject('UncoupledConstraintCorrection')
                 

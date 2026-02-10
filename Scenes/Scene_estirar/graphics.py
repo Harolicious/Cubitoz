@@ -9,7 +9,7 @@ Created on Tue Aug 20 18:08:37 2024
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('end_effector_data_Estirar_hyper4.csv')
+df = pd.read_csv('end_effector_data_Estirar_YMA.csv')
 
 Time = df['Time'].values
 Pressure = df['Pressure'].values
@@ -65,17 +65,17 @@ plt.savefig('DesplaX_presion_uniaxial.png', dpi=300)
 plt.show()
 
 
-plt.figure(figsize=(10, 6))
-plt.plot(Time, Pressure_PSI, marker=',')
+# plt.figure(figsize=(10, 6))
+# plt.plot(Time, Pressure_PSI, marker=',')
 
-plt.xlabel('Time (s)')
-plt.ylabel('Pressure PSI')
-plt.title('Presión a lo largo de la simulación')
-plt.grid(True)
-plt.savefig('Pressure_time_uniaxial.png', dpi=300)
+# plt.xlabel('Time (s)')
+# plt.ylabel('Pressure PSI')
+# plt.title('Presión a lo largo de la simulación')
+# plt.grid(True)
+# plt.savefig('Pressure_time_uniaxial.png', dpi=300)
 
 
-plt.show()
+# plt.show()
 
 # plt.figure(figsize=(10, 6))
 # plt.plot(Time_v2, Pressure_PSI, marker=',')

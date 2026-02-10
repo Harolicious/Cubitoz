@@ -13,7 +13,8 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
-PSI = 6
+PSI = 4.5
+despla = 11 #desplazamiento deseado 
 
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
@@ -42,7 +43,7 @@ class Controller(Sofa.Core.Controller):
         self.EndEffectorMO = kwargs['EndEffectorMO']
         
         # Definir ruta de archivo csv 
-        self.csv_file_path = "end_effector_data_Rotador.csv"
+        self.csv_file_path = "end_effector_data_Rotador_YMA.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -141,6 +142,8 @@ def createScene(rootNode):
                     Sofa.Component.Topology.Container.Constant
                     Sofa.Component.Topology.Container.Dynamic
                     Sofa.Component.Visual
+                    Sofa.Component.Topology.Mapping
+                    Sofa.Component.Collision.Geometry
                     Sofa.GL.Component.Rendering3D
                     Sofa.GL.Component.Shader"""
                 )
@@ -155,19 +158,15 @@ def createScene(rootNode):
                         showForceFields
                         showInteractionForceFields""",
                 )
-                
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
-                rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
-                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 0.001 
+                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.00001)
+                rootNode.dt = 0.01 
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
-                
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
-
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
                 Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='Cubitorotador.vtk')
@@ -177,92 +176,111 @@ def createScene(rootNode):
                 MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 18, -13,  13, 20.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-14, 18, -14,  14, 22, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 1, -13,  13, 19, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 125000 #YMd del Ecoflex0030
-                YM2 = YM1*1000
-                YMArray = np.ones(len(Loader.tetras))*YM1
-                IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
-                YMArray[IdxElementsInROI] = YM2
-                print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
+                boxROIMain.init()
                 
-                print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
+                YM_base = 5420 #5419.85
+                YM_stiffROI = 6000 * 100
                 
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
-
-                cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROI = cubito.addObject('BoxROI', name='boxROI', box=[-14,  -2, -14,  14, 2, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
-                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                #cubito.addObject('UncoupledConstraintCorrection')
+                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')   
+                
+                modelStiff = cubito.addChild('modelStiff')
+                modelStiff.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIStiffness.tetrahedraInROI", name='container')
+                modelStiff.addObject('TetrahedronFEMForceField', template = 'Vec3d', name='FEM_stiff', method='large', poissonRatio=0.45, youngModulus=YM_stiffROI) 
+                
+                modelSubTopo1 = cubito.addChild('modelSubTopo1')
+                modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
+                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3d',  name='FEM_main', method='large', poissonRatio=0.45, youngModulus=YM_base)
 
+        #cubito/fibers
+       
+                FiberNode = cubito.addChild("FiberReinforcement")
+               
+                Radius = Constants.RadioCilindro
+                BaseHeight = 2.5
+                CylinderHeight = Constants.AlturaCilindro
+               
+                # Ajustes solicitados
+                HelixStartOffset = 2.0
+                HelixEndOffset = 2.0
+               
+                HelixStartY = BaseHeight + HelixStartOffset
+                HelixEndY = BaseHeight + CylinderHeight - HelixEndOffset
+                HelixHeight = HelixEndY - HelixStartY
+               
+                Density = 12        # Discretización vertical
+                Repeat = 8           # Número de fibras
+                Turns = 0.3        # Número de vueltas helicoidales
+               
+                PointsHelix = []
+                EdgesHelix = []
+               
+                dY = HelixHeight / (Density - 1)
+                dTheta = 2 * np.pi * Turns / (Density - 1)
+               
+                for i in range(Density):
+                    y = HelixStartY + i * dY
+                    theta_i = i * dTheta
+               
+                    for j in range(Repeat):
+                        idx = i * Repeat + j
+                        theta = theta_i + j * (2 * np.pi / Repeat)
+               
+                        x = Radius * np.cos(theta)
+                        z = Radius * np.sin(theta)
+               
+                        PointsHelix.append([x, y, z])
+               
+                        # Conexión vertical (helicoidal)
+                        if i < Density - 1:
+                            EdgesHelix.append([idx, idx + Repeat])
+               
+                FiberNode.addObject("Mesh", name="HelicalMesh", position=PointsHelix, edges=EdgesHelix)                
+                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=7e5)
+                FiberNode.addObject("BarycentricMapping")
+               
+                RingNode = cubito.addChild("RingReinforcement")
+               
+                DensityRing =16
+                dAngle = 2 * np.pi / DensityRing
+               
+                RingHeights = [HelixStartY, HelixEndY]
+               
+                PointsRing = []
+                EdgesRing = []
+               
+                for level, y in enumerate(RingHeights):
+                    for j in range(DensityRing):
+                        idx = level * DensityRing + j
+                        angle = j * dAngle
+               
+                        x = Radius * np.cos(angle)
+                        z = Radius * np.sin(angle)
+               
+                        PointsRing.append([x, y, z])
+                
+                        # Cierre circular
+                        next_j = (j + 1) % DensityRing
+                        EdgesRing.append([idx, level * DensityRing + next_j])
+               
+                RingNode.addObject("Mesh", name="RingMesh", position=PointsRing, edges=EdgesRing)                
+                RingNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)
+                RingNode.addObject("MeshSpringForceField", linesStiffness=7e6)
+                RingNode.addObject("BarycentricMapping")
+              
         # Punto "End-effector"
                 
                 EndEffectorNode = cubito.addChild("EndEffectorNode")
                 EndEffectorMO = EndEffectorNode.addObject("MechanicalObject", position=[[0,LadoCubo,0], [10,LadoCubo,0]], showObject=True, showObjectScale=10)
                 EndEffectorNode.addObject("BarycentricMapping")
-                
-
-        #cubito/fibers
-        
-                FiberNode = cubito.addChild("FiberReinforcementNode")    
-                
-                Density = 20
-                IncrementAngle = np.pi/Density
-                Radius = 8
-                Repeat = 5
-                Deg = 2*np.pi/Repeat
-                LevelHeight = 13.5
-                Points = []
-                Edges = []
-                for i in range(Density):
-                    for j in range (0,Repeat):
-                        
-                        Angle = i*IncrementAngle
-                        Coords = [Radius*np.cos(Angle+Deg*j), 5+i/Density*LevelHeight, Radius*np.sin(Angle+Deg*j)]
-                        Points.append(Coords)
-                        
-                        if i<=Density-2:
-                            Edges.append([i*Repeat+j,i*Repeat+Repeat+j])
-                            
-                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
-                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e8)
-                FiberNode.addObject("BarycentricMapping")
-
-                FiberNode = cubito.addChild("FiberReinforcementNode")  
-                
-                Density2 = 20
-                IncrementAngle2 = 2*np.pi/Density2
-                Radius2 = 8
-                NLevels2 = 2
-                LevelHeight2 = 13
-                Points2 = []
-                Edges2 = []
-                for i in range(NLevels2):
-                    for j in range(0,Density2): 
-                        Angle2 = j*IncrementAngle2
-                        Coords2 = [Radius2*np.cos(Angle2), 5+i*LevelHeight2, Radius2*np.sin(Angle2)]
-                        Points2.append(Coords2)
-                        if j>=1:
-                            Edges2.append([i*Density2+j-1,i*Density2+j]) 
-                            if j==Density2-1:
-                                for k in range(0,NLevels2):
-                                    Edges2.append([k*Density2,(1+k)*Density2-1])
-                                    
-                                    
-                    
-                
-                FiberNode.addObject("Mesh", position=Points2, name="Mesh", edges=Edges2)
-                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
-                FiberNode.addObject("BarycentricMapping")
-                
-                
                 
                 
 		#cubito/cavity
@@ -271,10 +289,15 @@ def createScene(rootNode):
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
                 SPC=cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)
-                #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
-
-
+        
+        # goal
+                goal = rootNode.addChild('goal')
+                goal.addObject('EulerImplicitSolver', firstOrder=True)
+                goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
+                goal.addObject('MechanicalObject', name='goalMO', position=[0, LadoCubo+despla , 0], showObject=True, showObjectScale=15)
+                goal.addObject('SphereCollisionModel', radius=2.5, group=1)
+                
 		#cubito/cubitoVisu
                 cubitoVisu = cubito.addChild('visu')
                 cubitoVisu.addObject("MeshSTLLoader", filename="Cubito_rotador_visu.stl", name="loader")
@@ -282,8 +305,5 @@ def createScene(rootNode):
                 cubitoVisu.addObject("BarycentricMapping")
                 
                 rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPC=SPC, EndEffectorMO=EndEffectorMO))
-                
-
-                
                 
                 return rootNode

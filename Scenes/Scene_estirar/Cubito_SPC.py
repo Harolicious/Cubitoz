@@ -13,7 +13,7 @@ import csv
 import numpy as np
 
 LadoCubo = Constants.LadoCubo
-PSI = 7
+PSI = 6.7
 
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
@@ -38,7 +38,7 @@ class Controller(Sofa.Core.Controller):
         self.EndEffectorMO2 = kwargs['EndEffectorMO2']       
         
         # Definir ruta de archivo csv 
-        self.csv_file_path = "end_effector_data_Estirar.csv"
+        self.csv_file_path = "end_effector_data_Estirar_YMA.csv"
 
         # Crear archivo CSV y escribir encabezados si no existe
         if not os.path.exists(self.csv_file_path):
@@ -150,7 +150,7 @@ def createScene(rootNode):
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
                 rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                rootNode.dt = 0.001
+                rootNode.dt = 0.01
 
 		#cubito
                 cubito = rootNode.addChild('cubito')
@@ -171,7 +171,7 @@ def createScene(rootNode):
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 148500
+                YM1 = 11186
                 YM2 = YM1*100
                 YMArray = np.ones(len(Loader.tetras))*YM1
                 IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
@@ -179,16 +179,11 @@ def createScene(rootNode):
                 print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
                 
                 print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=180000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=180000)
-                
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
+                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.45,  youngModulus=YMArray.flatten().tolist())
 
                 cubito.addObject('BoxROI', name='boxROI', box=[-13, -0.5, -13,  13, 1.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
                 cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
-                #cubito.addObject('UncoupledConstraintCorrection')
                 
         # Punto "End-effector"
                 

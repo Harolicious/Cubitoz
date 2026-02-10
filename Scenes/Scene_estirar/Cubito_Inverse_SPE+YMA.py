@@ -1,10 +1,4 @@
-"""
-Created on Wed Apr 20 14:32:47 2024
 
-@author: lab_Harold
-"""
-
-# import Sofa
 import Sofa.Core
 import Constants
 
@@ -13,34 +7,11 @@ import numpy as np
 path = os.path.dirname(os.path.abspath(__file__))+'/mesh/'
 
 LadoCubo = Constants.LadoCubo
-PSI = 7
-Displa = 9
+PSI = 6.6
+Displa = 7.8
 
 
-# class Controller(Sofa.Core.Controller):   
-    
-#     def __init__(self, *args, **kwargs):
-#         Sofa.Core.Controller.__init__(self, *args, **kwargs)
-#         print(" Python::__init__::" + str(self.name.value))
-        
-#         self.RootNode = kwargs['RootNode']
-#         self.SPA = kwargs['SPA']
-#         self.Increment = 0.4
-#         self.Pressure = 0
-#         print(kwargs['RootNode'])
-    
-        
-#         print('Finished Init')
-        
-#     def onAnimateBeginEvent(self, eventType):
-#         self.Pressure = self.Pressure + self.Increment
-#         if self.Pressure > 60 or self.Pressure < 0:
-#             # self.Pressure = 550
-#             self.Increment = -self.Increment
-#         self.SPA.value.value = [self.Pressure]
-        
-#         pass
-  
+
 def createScene(rootNode):
 
                 rootNode.addObject(
@@ -67,6 +38,8 @@ def createScene(rootNode):
                     Sofa.Component.Topology.Container.Constant
                     Sofa.Component.Topology.Container.Dynamic
                     Sofa.Component.Visual
+                    Sofa.Component.Topology.Mapping
+                    Sofa.Component.Collision.Geometry
                     Sofa.GL.Component.Rendering3D
                     Sofa.GL.Component.Shader"""
                 )
@@ -82,60 +55,65 @@ def createScene(rootNode):
                         showInteractionForceFields""",
                 )
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
-                rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
-                rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=1000,tolerance=1e-5)
-                rootNode.dt = 0.001
+                rootNode.addObject("QPInverseProblemSolver", printLog=1, epsilon=0.1, maxIterations=100,tolerance=0.0000001)
+                rootNode.dt = 0.01
 
         #cubito
                 cubito = rootNode.addChild('cubito')
                 cubito.addObject('EulerImplicitSolver', name='odesolver')
-                
-                cubito.addObject('SparseLDLSolver', name='preconditioner')
-
+                cubito.addObject('SparseLDLSolver', name='preconditioner', template='CompressedRowSparseMatrixMat3x3d')
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioner='@preconditioner', use_precond=True, update_step=1)
 
                 Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoEstirar.vtk')
-                Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
+                Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container' , edges=False)
                 cubito.addObject('TetrahedronSetTopologyModifier')
 
-                MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3', showIndices=False)
+                MO = cubito.addObject('MechanicalObject', name='tetras', template='Vec3d', showIndices=False)
                 cubito.addObject('UniformMass', totalMass=0.5)
                 
-                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-13, 17.5, -13,  13, 20, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, 2, -13,  13, 17.5, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIStiffness = cubito.addObject('BoxROI', name='boxROIStiffness', box=[-14, 18, -14,  14, 22, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROIMain = cubito.addObject('BoxROI', name='boxROIMain', box=[-13, -1, -13,  13, 19, 13], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 
                 Container.init()
                 MO.init()
                 boxROIStiffness.init()
-                YM1 = 100000
-                YM2 = YM1*100
-                YMArray = np.ones(len(Loader.tetras))*YM1
-                IdxElementsInROI = np.array(boxROIStiffness.tetrahedronIndices.value)
-                YMArray[IdxElementsInROI] = YM2
-                print(f"len IdxElementsInROI: {len(IdxElementsInROI)}")
+                boxROIMain.init()
                 
-                print(f"Largo de YMArray:{len(YMArray)}")
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=100000)
-                cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=YMArray.flatten().tolist())
-                #cubito.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM2', method='large', poissonRatio=0.3,  youngModulus=100000)
+                YM_base  = 15000 #14850
+                YM_stiffROI = YM_base*100
                 
-                #cubito.addObject('TetrahedronHyperelasticityFEMForceField', name="HyperElasticMaterial", materialName="MooneyRivlin", ParameterSet="48000 -1.5e5 3000")
+                n_tetra_total = len(Loader.tetras)
+                print("Número total de tetraedros:", n_tetra_total)
+                
+                idx_tetra_stiff = boxROIStiffness.tetrahedronIndices.value
+                n_stiff = len(idx_tetra_stiff)
+                print("Número de tetraedros en boxROIStiffness:", n_stiff)
+                
+                idx_tetra_base = boxROIMain.tetrahedronIndices.value
+                n_base = len(idx_tetra_base)
+                print("Número de tetraedros en boxROIMain:", n_base)
 
-                cubito.addObject('BoxROI', name='boxROI', box=[-13,  0, -13,  13, 2, 13], drawBoxes=False, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                boxROI = cubito.addObject('BoxROI', name='boxROI', box=[-14,  -2, -14,  14, 2, 14], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 cubito.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
-                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')
+                cubito.addObject('GenericConstraintCorrection', linearSolver='@preconditioner')    
                 
+                idx_tetra_BC = boxROI.tetrahedronIndices.value
+                n_BC = len(idx_tetra_BC)
+                print("Número de tetraedros en boxROIBC:", n_BC)
+
+                modelStiff = cubito.addChild('modelStiff')
+                modelStiff.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIStiffness.tetrahedraInROI", name='container')
+                modelStiff.addObject('TetrahedronFEMForceField', template = 'Vec3d', name='FEM_stiff', method='large', poissonRatio=0.45, youngModulus=YM_stiffROI) 
                 
                 modelSubTopo1 = cubito.addChild('modelSubTopo1')
-                boxROIMain.init()
                 modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
-                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3', poissonRatio=0.45, youngModulus=100000)
-                modelSubTopo1.addObject('YoungModulusActuator', template='Vec3', name='actuator', maxYoungVariationRatio=0.02, minYoung=10)
-                # print(f"YM Value:{modelSubTopo1.TetrahedronFEMForceField.youngModulus.value}")
-                #cubito.addObject('UncoupledConstraintCorrection')
-                
+                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3d',  name='FEM_main', method='large', poissonRatio=0.45, youngModulus=YM_base)
+                modelSubTopo1.addObject('YoungModulusActuator', template='Vec3d', name='YMActuator', maxYoungVariationRatio=0.1, minYoung=10, maxYoung=YM_base)   
+            
 
+            
+                
         #cubito/fibers
         
                 FiberNode = cubito.addChild("FiberReinforcementNode")    
@@ -167,19 +145,15 @@ def createScene(rootNode):
                 cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoEstirar_Cavity.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
-                SPA = cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=6.89 * PSI) # PSI to KPa
-                #cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=False)
+                cavity.addObject('SurfacePressureEquality', triangles='@topo.triangles', eqPressure=6.89 * PSI) # PSI to KPa
                 cavity.addObject('BarycentricMapping', name='mapping',  mapForces=True, mapMasses=True)
                 
-        # Effector
-        # bunny/effector
         # goal
                 goal = rootNode.addChild('goal')
                 goal.addObject('EulerImplicitSolver', firstOrder=True)
                 goal.addObject('CGLinearSolver', iterations=100, tolerance=1e-5, threshold=1e-5)
                 goal.addObject('MechanicalObject', name='goalMO', position=[0, LadoCubo + Displa , 0], showObject=True, showObjectScale=15)
-                goal.addObject('SphereCollisionModel', radius=2.5, group=1)
-                goal.addObject('UncoupledConstraintCorrection')
+                goal.addObject('SphereCollisionModel', radius=2.5, group=1)   
   
         # Punto "End-effector"   
                 effector = cubito.addChild('EffectorNode')
@@ -196,3 +170,4 @@ def createScene(rootNode):
                 # rootNode.addObject(Controller(name="ActuationController", RootNode=rootNode, SPA=SPA))
                 
                 return rootNode
+            

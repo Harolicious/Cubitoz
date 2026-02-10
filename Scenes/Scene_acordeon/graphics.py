@@ -62,16 +62,3 @@ plt.savefig('Angle_presion_tilt.png', dpi=300)
 plt.grid(True)
 plt.show()
 
-plt.figure(figsize=(10, 6))
-plt.plot(Time_up, Pressure_PSI_up, marker=',' ,color='blue')
-plt.plot(Time_down, Pressure_PSI_down, marker=',', color='green')
-plt.legend(['Inflated', 'Deflated'])
-
-plt.xlabel('Time (s)')
-plt.ylabel('Pressure (PSI)')
-plt.title('Presión a lo largo de la simulación')
-
-plt.savefig('Pressure_time_tilt.png', dpi=300)
-
-plt.grid(True)
-plt.show()
