@@ -186,18 +186,18 @@ def createScene(rootNode):
                 
                 modelStiff = cubito.addChild('modelStiff')
                 modelStiff.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIStiffness.tetrahedraInROI", name='container')
-                # modelStiff.addObject('TetrahedronFEMForceField', template = 'Vec3d', name='FEM_stiff', method='large', poissonRatio=0.45, youngModulus=YM_stiffROI) 
+                modelStiff.addObject('TetrahedronFEMForceField', template = 'Vec3d', name='FEM_stiff', method='large', poissonRatio=0.45, youngModulus=YM_stiffROI) 
                 
                 modelSubTopo1 = cubito.addChild('modelSubTopo1')
                 modelSubTopo1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIMain.tetrahedraInROI", name='container')
-                # modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3d',  name='FEM_main', method='large', poissonRatio=0.45, youngModulus=YM_base)
+                modelSubTopo1.addObject('TetrahedronFEMForceField', template='Vec3d',  name='FEM_main', method='large', poissonRatio=0.45, youngModulus=YM_base)
 
                 
         #cubito/fibers
 
-                Radius = Constants.RadioCilindro_s
+                Radius = Constants.RadioCilindro
                 
-                ring_density = 12          # nodos por anillo
+                ring_density = 16          # nodos por anillo
                 diameter_density = 8       # fibras diametrales en tapas
                 n_rings = 6                # anillos a lo largo del cilindro
                 
@@ -207,7 +207,7 @@ def createScene(rootNode):
                 stiffness_ring = 5e5
                 stiffness_diameter = 5e5
                 
-                cube_center = np.array([7.5, 17.5, 0.0])
+                cube_center = np.array([10.8, 22.3, 0.0])
                 
                 # Rotación -45°
                 angle_rad = np.radians(-45)

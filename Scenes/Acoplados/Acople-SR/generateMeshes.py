@@ -17,23 +17,28 @@ gmsh.initialize()
 LadoCubo = Constants.LadoCubo
 AlturaCilindro = Constants.AlturaCilindro
 RadioCilindro = Constants.RadioCilindro
+AlturaCilindro_s = Constants.AlturaCilindro_s
+RadioCilindro_s = Constants.RadioCilindro_s
+
 
 #Cubo con cavidad
 
-Box1Tag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
-DimTagBox1 = (3, Box1Tag)
-meshembed(LadoCubo, 1, 0.01, Box1Tag, 0)
 
-Cylinder1Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
+Box2Tag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
+DimTagBox2 = (3, Box2Tag)
+meshembed(LadoCubo, 1, 0.01, Box2Tag, 0)
+
+Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro_s)/2,0,0, AlturaCilindro_s, 0 , RadioCilindro_s, angle= 2*np.pi)
+DimTagCylinder2 = (3, Cylinder2Tag)
+DimTagcylinder2 = gmsh.model.occ.rotate([DimTagCylinder2], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
+
+Box1Tag = gmsh.model.occ.addBox(-LadoCubo/2, LadoCubo,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
+DimTagBox1 = (3, Box1Tag)
+meshembed(LadoCubo, 1, 0.01, Box1Tag, LadoCubo)
+
+Cylinder1Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder1 = (3, Cylinder1Tag)
 
-
-Box2Tag = gmsh.model.occ.addBox(-LadoCubo/2, LadoCubo,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
-DimTagBox2 = (3, Box2Tag)
-meshembed(LadoCubo, 1, 0.01, Box2Tag, LadoCubo)
-
-Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
-DimTagCylinder2 = (3, Cylinder2Tag)
 
 FusionOut = gmsh.model.occ.fuse([(DimTagBox1)], [(DimTagBox2)])
 EnsambleDimTag = FusionOut[0][0]
@@ -50,13 +55,13 @@ gmsh.model.occ.synchronize()
 defineMeshSizes(3)
 gmsh.model.mesh.generate(3)
 # gmsh.model.mesh.refine()
-gmsh.write("CubitoRotadorx2.vtk")
+gmsh.write("Cubitox2.vtk")
 gmsh.fltk.run()
 
 gmsh.clear()
 
 
-CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0, 0, AlturaCilindro,0, RadioCilindro, angle= 2*np.pi)
+CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder = (3, CylinderTag)
 
 gmsh.model.occ.synchronize()
@@ -68,8 +73,9 @@ gmsh.fltk.run()
 
 gmsh.clear()
 
-Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
-DimTagCylinder2 = (3, Cylinder2Tag)
+CylinderTag2 = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro_s)/2,0, 0, AlturaCilindro_s,0, RadioCilindro_s, angle= 2*np.pi)
+DimTagCylinder2 = (3, CylinderTag2)
+DimTagcylinder2 = gmsh.model.occ.rotate([DimTagCylinder], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
 gmsh.model.occ.synchronize()
 defineMeshSizes(2)
@@ -80,16 +86,18 @@ gmsh.fltk.run()
 
 gmsh.clear()
 
-CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0, 0, AlturaCilindro,0, RadioCilindro, angle= 2*np.pi)
+CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder = (3, CylinderTag)
-Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
+
+Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro_s)/2,0,0, AlturaCilindro_s, 0 , RadioCilindro_s, angle= 2*np.pi)
 DimTagCylinder2 = (3, Cylinder2Tag)
+DimTagcylinder2 = gmsh.model.occ.rotate([DimTagCylinder2], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
 gmsh.model.occ.synchronize()
 defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
-gmsh.write("CubitoEB_Cavityx2.stl")
+gmsh.write("CubitoSR_Cavityx2.stl")
 gmsh.fltk.run()
 
 gmsh.clear()
@@ -111,3 +119,6 @@ gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 
 gmsh.write("CubitoVisual.stl")
+
+gmsh.clear()
+gmsh.finalize()

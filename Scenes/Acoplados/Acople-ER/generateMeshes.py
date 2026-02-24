@@ -89,7 +89,7 @@ gmsh.model.occ.synchronize()
 defineMeshSizes(2)
 gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
-gmsh.write("CubitoEB_Cavityx2.stl")
+gmsh.write("CubitoAR_Cavityx2.stl")
 gmsh.fltk.run()
 
 gmsh.clear()
@@ -111,3 +111,6 @@ gmsh.model.mesh.generate(2)
 gmsh.model.mesh.refine()
 
 gmsh.write("CubitoVisual.stl")
+
+gmsh.clear()
+gmsh.finalize()

@@ -13,7 +13,7 @@ import csv
 import numpy as np
 
 PSI1 = 4
-PSI2 = 5
+PSI2 = 5.5
 despla = 4.5 #desplazamiento deseado 
 
 LadoCubo = Constants.LadoCubo
@@ -53,7 +53,7 @@ class Controller(Sofa.Core.Controller):
         self.Pressure2 = 0
 
         # Archivo CSV
-        self.csv_file_path = "end_effector_data_AR_YMA.csv"
+        self.csv_file_path = "end_effector_data_SR_YMA.csv"
 
         if not os.path.exists(self.csv_file_path):
             with open(self.csv_file_path, mode='w', newline='') as file:
@@ -206,7 +206,7 @@ def createScene(rootNode):
                 cubito.addObject('SparseLDLSolver', name='preconditioner')
                 cubito.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioners='preconditioner', use_precond=True, update_step=1)
 
-                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='CubitoRotadorx2.vtk')
+                Loader = cubito.addObject('MeshVTKLoader', name='loader', filename='Cubitox2.vtk')
                 Container = cubito.addObject('TetrahedronSetTopologyContainer', src='@loader', name='container')
                 cubito.addObject('TetrahedronSetTopologyModifier')
 
@@ -228,7 +228,7 @@ def createScene(rootNode):
                 boxROIMain2.init()
                 
                 
-                YM_base1 = 6560 #7648.08
+                YM_base1 = 4620 #7648.08
                 YM_stiffROI1 = 8000 * 100
                 YM_base2 = 5420 #5419.85
                 YM_stiffROI2 = 6000 * 100
@@ -256,96 +256,146 @@ def createScene(rootNode):
                 
         #cubito/fibers
       
-        #Acordeon
+        #shear
 
-                CylinderHeight = Constants.AlturaCilindro
-                y_start = 3.5
-                y_end = CylinderHeight + 1.5
-                fiber_height = y_end - y_start     # = 7.0
+                Radius = Constants.RadioCilindro_s
                 
-                Radius = Constants.RadioCilindro
+                ring_density = 16          # nodos por anillo
+                diameter_density = 8       # fibras diametrales en tapas
+                n_rings = 6                # anillos a lo largo del cilindro
                 
-                def create_rings(parent, name, radius, n_rings, ring_density, y_start, y_end, stiffness):
+                y_start = 3
+                y_end = 11
                 
-                    node = parent.addChild(name)
+                stiffness_ring = 5e5
+                stiffness_diameter = 5e5
                 
-                    Points = []
-                    Edges = []
+                cube_center = np.array([7.25, 17.25, 0.0])
                 
-                    dTheta = 2 * np.pi / ring_density
-                    dy = (y_end - y_start) / (n_rings - 1)
+                # Rotación -45°
+                angle_rad = np.radians(-45)
+                R = np.array([
+                    [np.cos(angle_rad), -np.sin(angle_rad), 0],
+                    [np.sin(angle_rad),  np.cos(angle_rad), 0],
+                    [0,                  0,                 1]
+                ])
                 
-                    for i in range(n_rings):
-                        y = y_start + i * dy
+                 
+                def create_ring(points, edges, center, radius, y, density, R):
                 
-                        ring_offset = i * ring_density
-                
-                        for j in range(ring_density):
-                            theta = j * dTheta
-                            x = radius * np.cos(theta)
-                            z = radius * np.sin(theta)
-                
-                            Points.append([x, y, z])
-                
-                            # Cerrar anillo
-                            Edges.append([
-                                ring_offset + j,
-                                ring_offset + (j + 1) % ring_density
-                            ])
-                
-                    node.addObject("Mesh", position=Points, edges=Edges)
-                    node.addObject("MechanicalObject", showObject=True, showObjectScale=10)
-                    node.addObject("MeshSpringForceField", linesStiffness=stiffness)
-                    node.addObject("BarycentricMapping")
-                
-                    
-                
-                def create_helices_sector(parent, name, radius, n_fibers, density,
-                                          y_start, height, total_angle,
-                                          sector_angle, stiffness, angle_offset=0.0):
-                
-                    node = parent.addChild(name)
-                
-                    Points = []
-                    Edges = []
-                
-                    dY = height / (density - 1)
-                    dTheta = total_angle / (density - 1)
-                    fiber_angle = sector_angle / (n_fibers - 1)
+                    offset = len(points)
+                    dtheta = 2 * np.pi / density
                 
                     for i in range(density):
-                        y = y_start + i * dY
-                        theta_i = i * dTheta + angle_offset
+                        theta = i * dtheta
                 
-                        for j in range(n_fibers):
-                            idx = i * n_fibers + j
-                            theta = theta_i + j * fiber_angle
+                        p = np.array([
+                            center[0] + radius * np.cos(theta),
+                            y,
+                            center[2] + radius * np.sin(theta)
+                        ])
                 
-                            x = radius * np.cos(theta)
-                            z = radius * np.sin(theta)
+                        p_rot = R @ (p - center) + center
+                        points.append(p_rot.tolist())
                 
-                            Points.append([x, y, z])
-                
-                            if i < density - 1:
-                                Edges.append([idx, idx + n_fibers])
-                
-                    node.addObject("Mesh", position=Points, edges=Edges)
-                    node.addObject("MechanicalObject", showObject=True, showObjectScale=10)
-                    node.addObject("MeshSpringForceField", linesStiffness=stiffness)
-                    node.addObject("BarycentricMapping")
+                        edges.append([
+                            offset + i,
+                            offset + (i + 1) % density
+                        ])
                 
                 
-                create_rings(parent=cubito, name="FiberReinforcementNode1", radius=Radius, n_rings=6,
-                             ring_density=15, y_start=y_start, y_end = y_end, stiffness=5e9)                
+                def create_ring_with_diameters(points, edges, center, radius, y, ring_density,
+                                               diameter_density, R):
+                    offset_ring = len(points)
+                    dtheta_ring = 2 * np.pi / ring_density
                 
-                create_helices_sector(parent=cubito, name="FiberReinforcementNode_Positive", radius=Radius, n_fibers=4,
-                                      density=10, y_start=y_start, height=fiber_height, total_angle=np.pi/2,
-                                      sector_angle=np.pi/2, angle_offset=-np.pi/2, stiffness=1e9)
+                    for i in range(ring_density):
+                        theta = i * dtheta_ring
                 
-                create_helices_sector(parent=cubito, name="FiberReinforcementNode_Negative", radius=Radius, n_fibers=4,
-                                      density=10, y_start=y_start, height=fiber_height, total_angle=-np.pi/2,
-                                      sector_angle=np.pi/2, angle_offset=0.0, stiffness=1e9)
+                        p = np.array([
+                            center[0] + radius * np.cos(theta),
+                            y,
+                            center[2] + radius * np.sin(theta)
+                        ])
                 
+                        p_rot = R @ (p - center) + center
+                        points.append(p_rot.tolist())
+                
+                        edges.append([
+                            offset_ring + i,
+                            offset_ring + (i + 1) % ring_density
+                        ])
+                
+                    dtheta = np.pi / diameter_density
+                    ds = 2 * radius / diameter_density
+                
+                    for j in range(diameter_density):
+                        theta = j * dtheta
+                
+                        prev_idx = None
+                
+                        for k in range(diameter_density + 1):
+                            s = -radius + k * ds
+                
+                            p = np.array([
+                                center[0] + s * np.cos(theta),
+                                y,
+                                center[2] + s * np.sin(theta)
+                            ])
+                
+                            p_rot = R @ (p - center) + center
+                            idx = len(points)
+                            points.append(p_rot.tolist())
+                
+                            if prev_idx is not None:
+                                edges.append([prev_idx, idx])
+                
+                            prev_idx = idx
+                 
+                FiberBody = cubito.addChild("FiberBody")
+                
+                PointsBody = []
+                EdgesBody = []
+                
+                height = y_end - y_start
+                
+                for i in range(n_rings):
+                    y = y_start + i * height / (n_rings - 1)
+                
+                    create_ring(points=PointsBody, edges=EdgesBody, center=cube_center,radius=Radius,
+                                y=y, density=ring_density, R=R)
+                
+                FiberBody.addObject("Mesh", position=PointsBody, edges=EdgesBody)
+                FiberBody.addObject("MechanicalObject", showObject=True, showObjectScale=10)
+                FiberBody.addObject("MeshSpringForceField",linesStiffness=stiffness_ring)
+                FiberBody.addObject("BarycentricMapping")
+                
+                
+                CapBottom = cubito.addChild("CapBottom")
+                
+                PointsB = []
+                EdgesB = []
+                
+                create_ring_with_diameters(points=PointsB, edges=EdgesB, center=cube_center,radius=Radius,
+                                           y=y_start-2, ring_density=ring_density,diameter_density=diameter_density, R=R)
+                
+                CapBottom.addObject("Mesh", position=PointsB, edges=EdgesB)
+                CapBottom.addObject("MechanicalObject", showObject=True, showObjectScale=10)
+                CapBottom.addObject("MeshSpringForceField", linesStiffness=stiffness_diameter)
+                CapBottom.addObject("BarycentricMapping")
+                
+                CapTop = cubito.addChild("CapTop")
+                
+                PointsT = []
+                EdgesT = []
+                
+                create_ring_with_diameters(points=PointsT,edges=EdgesT,center=cube_center,radius=Radius,
+                                           y=y_end+2, ring_density=ring_density, diameter_density=diameter_density,R=R)
+                
+                CapTop.addObject("Mesh", position=PointsT, edges=EdgesT)
+                CapTop.addObject("MechanicalObject", showObject=True, showObjectScale=10)
+                CapTop.addObject("MeshSpringForceField",linesStiffness=stiffness_diameter)
+                CapTop.addObject("BarycentricMapping")
        
         #Rotador                
 
@@ -445,7 +495,7 @@ def createScene(rootNode):
                 
 		#cubito/cavity
                 cavity = cubito.addChild('cavity1')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoAcordeon_Cavity01.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='Cubito_Cavity01.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
                 SPC1 = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)                
@@ -453,7 +503,7 @@ def createScene(rootNode):
 
 	
                 cavity = cubito.addChild('cavity2')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoRotador_Cavity02.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='Cubito_Cavity02.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')           
                 SPC2 = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)                

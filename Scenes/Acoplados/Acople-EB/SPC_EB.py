@@ -12,8 +12,8 @@ import os
 import csv
 import numpy as np
 
-PSI1 = 4
-PSI2 = 5
+PSI1 = 6.7
+PSI2 = 7.4  
 despla = 4.5 #desplazamiento deseado 
 
 LadoCubo = Constants.LadoCubo
@@ -53,7 +53,7 @@ class Controller(Sofa.Core.Controller):
         self.Pressure2 = 0
 
         # Archivo CSV
-        self.csv_file_path = "end_effector_data_AR_YMA.csv"
+        self.csv_file_path = "end_effector_data_ER_YMA.csv"
 
         if not os.path.exists(self.csv_file_path):
             with open(self.csv_file_path, mode='w', newline='') as file:
@@ -196,8 +196,8 @@ def createScene(rootNode):
                 # rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
                 rootNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Mapping') # Needed to use components [Tetra2TriangleTopologicalMapping]
                 rootNode.addObject('FreeMotionAnimationLoop')
-                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
-                
+                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.00001)
+                rootNode.dt = 0.01 
                               
 		#cubito
         
@@ -228,10 +228,10 @@ def createScene(rootNode):
                 boxROIMain2.init()
                 
                 
-                YM_base1 = 6560 #7648.08
-                YM_stiffROI1 = 8000 * 100
-                YM_base2 = 5420 #5419.85
-                YM_stiffROI2 = 6000 * 100
+                YM_base1 = 11186
+                YM_stiffROI1 = 11000 * 100
+                YM_base2 = 4396.22 
+                YM_stiffROI2 = 4500 * 100
                
                 modelStiff1 = cubito.addChild('modelStiff1')
                 modelStiff1.addObject('TetrahedronSetTopologyContainer', position='@../loader.position', tetrahedra="@../boxROIStiffness1.tetrahedraInROI", name='container')
@@ -256,177 +256,135 @@ def createScene(rootNode):
                 
         #cubito/fibers
       
-        #Acordeon
+        #Estirar
 
-                CylinderHeight = Constants.AlturaCilindro
-                y_start = 3.5
-                y_end = CylinderHeight + 1.5
-                fiber_height = y_end - y_start     # = 7.0
+                FiberNode = cubito.addChild("FiberReinforcementNode")    
+                Density = 30
+                IncrementAngle = 2*np.pi/Density
+                Radius = 8
+                NLevels = 7
+                LevelHeight = 2
+                Points = []
+                Edges = []
+                for i in range(NLevels):
+                    for j in range(0,30): 
+                        Angle = j*IncrementAngle
+                        Coords = [Radius*np.cos(Angle), 4+i*LevelHeight, Radius*np.sin(Angle)]
+                        Points.append(Coords)
+                        if j>=1:
+                            Edges.append([i*Density+j-1,i*Density+j])
+                            if j==Density-1:
+                                Edges.append([i*Density+j, i*Density+j-Density+1])
                 
-                Radius = Constants.RadioCilindro
-                
-                def create_rings(parent, name, radius, n_rings, ring_density, y_start, y_end, stiffness):
-                
-                    node = parent.addChild(name)
-                
-                    Points = []
-                    Edges = []
-                
-                    dTheta = 2 * np.pi / ring_density
-                    dy = (y_end - y_start) / (n_rings - 1)
-                
-                    for i in range(n_rings):
-                        y = y_start + i * dy
-                
-                        ring_offset = i * ring_density
-                
-                        for j in range(ring_density):
-                            theta = j * dTheta
-                            x = radius * np.cos(theta)
-                            z = radius * np.sin(theta)
-                
-                            Points.append([x, y, z])
-                
-                            # Cerrar anillo
-                            Edges.append([
-                                ring_offset + j,
-                                ring_offset + (j + 1) % ring_density
-                            ])
-                
-                    node.addObject("Mesh", position=Points, edges=Edges)
-                    node.addObject("MechanicalObject", showObject=True, showObjectScale=10)
-                    node.addObject("MeshSpringForceField", linesStiffness=stiffness)
-                    node.addObject("BarycentricMapping")
-                
-                    
-                
-                def create_helices_sector(parent, name, radius, n_fibers, density,
-                                          y_start, height, total_angle,
-                                          sector_angle, stiffness, angle_offset=0.0):
-                
-                    node = parent.addChild(name)
-                
-                    Points = []
-                    Edges = []
-                
-                    dY = height / (density - 1)
-                    dTheta = total_angle / (density - 1)
-                    fiber_angle = sector_angle / (n_fibers - 1)
-                
-                    for i in range(density):
-                        y = y_start + i * dY
-                        theta_i = i * dTheta + angle_offset
-                
-                        for j in range(n_fibers):
-                            idx = i * n_fibers + j
-                            theta = theta_i + j * fiber_angle
-                
-                            x = radius * np.cos(theta)
-                            z = radius * np.sin(theta)
-                
-                            Points.append([x, y, z])
-                
-                            if i < density - 1:
-                                Edges.append([idx, idx + n_fibers])
-                
-                    node.addObject("Mesh", position=Points, edges=Edges)
-                    node.addObject("MechanicalObject", showObject=True, showObjectScale=10)
-                    node.addObject("MeshSpringForceField", linesStiffness=stiffness)
-                    node.addObject("BarycentricMapping")
-                
-                
-                create_rings(parent=cubito, name="FiberReinforcementNode1", radius=Radius, n_rings=6,
-                             ring_density=15, y_start=y_start, y_end = y_end, stiffness=5e9)                
-                
-                create_helices_sector(parent=cubito, name="FiberReinforcementNode_Positive", radius=Radius, n_fibers=4,
-                                      density=10, y_start=y_start, height=fiber_height, total_angle=np.pi/2,
-                                      sector_angle=np.pi/2, angle_offset=-np.pi/2, stiffness=1e9)
-                
-                create_helices_sector(parent=cubito, name="FiberReinforcementNode_Negative", radius=Radius, n_fibers=4,
-                                      density=10, y_start=y_start, height=fiber_height, total_angle=-np.pi/2,
-                                      sector_angle=np.pi/2, angle_offset=0.0, stiffness=1e9)
-                
+                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
+                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=1e9)
+                FiberNode.addObject("BarycentricMapping")
        
-        #Rotador                
+        #Barril                
 
-                FiberNode = cubito.addChild("FiberReinforcement")
-               
+                FiberNode = cubito.addChild("FiberReinforcementNode")  
+                
+
+                Density = 6              # discretización vertical
+                CapDensity = 6            # discretización SOLO en tapas
                 Radius = Constants.RadioCilindro
                 Displacement = Constants.LadoCubo
-                BaseHeight = 2.5
-                CylinderHeight = Constants.AlturaCilindro
-               
-                # Ajustes solicitados
-                HelixStartOffset = 2.0
-                HelixEndOffset = 2.0
-               
-                HelixStartY = Displacement + BaseHeight + HelixStartOffset
-                HelixEndY = Displacement + BaseHeight + CylinderHeight - HelixEndOffset
-                HelixHeight = HelixEndY - HelixStartY
-               
-                Density = 12        # Discretización vertical
-                Repeat = 8           # Número de fibras
-                Turns = 0.3        # Número de vueltas helicoidales
-               
-                PointsHelix = []
-                EdgesHelix = []
-               
-                dY = HelixHeight / (Density - 1)
-                dTheta = 2 * np.pi * Turns / (Density - 1)
-               
-                for i in range(Density):
-                    y = HelixStartY + i * dY
-                    theta_i = i * dTheta
-               
-                    for j in range(Repeat):
-                        idx = i * Repeat + j
-                        theta = theta_i + j * (2 * np.pi / Repeat)
-               
+                Repeat = 16             # potencia de 2
+                LevelHeight = Constants.AlturaCilindro
+                
+                Ymin = Displacement + 2.5
+                Ymax = Ymin + LevelHeight
+                dy = (Ymax - Ymin) / (Density - 1)
+                
+                half = Repeat // 2
+                
+                # avance angular entre fibras vecinas
+                dTheta_fiber = 2 * np.pi / Repeat
+                
+                # giro por nivel: fibra j → j+2
+                dTheta_level = (2 * dTheta_fiber) / (Density - 1)
+                
+                Points = []
+                Edges = []
+                
+
+                offset_pos = 0  # para indexado posterior
+                
+                for j in range(Repeat):
+                
+                    theta0 = j * dTheta_fiber
+                
+                    for i in range(Density):
+                
+                        theta = theta0 + i * dTheta_level
+                        y = Ymin + i * dy
+                
+                        idx = len(Points)
+                
                         x = Radius * np.cos(theta)
                         z = Radius * np.sin(theta)
-               
-                        PointsHelix.append([x, y, z])
-               
-                        # Conexión vertical (helicoidal)
-                        if i < Density - 1:
-                            EdgesHelix.append([idx, idx + Repeat])
-               
-                FiberNode.addObject("Mesh", name="HelicalMesh", position=PointsHelix, edges=EdgesHelix)                
-                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
-                FiberNode.addObject("MeshSpringForceField", linesStiffness=7e5)
-                FiberNode.addObject("BarycentricMapping")
-               
-                RingNode = cubito.addChild("RingReinforcement")
-               
-                DensityRing =16
-                dAngle = 2 * np.pi / DensityRing
-               
-                RingHeights = [HelixStartY, HelixEndY]
-               
-                PointsRing = []
-                EdgesRing = []
-               
-                for level, y in enumerate(RingHeights):
-                    for j in range(DensityRing):
-                        idx = level * DensityRing + j
-                        angle = j * dAngle
-               
-                        x = Radius * np.cos(angle)
-                        z = Radius * np.sin(angle)
-               
-                        PointsRing.append([x, y, z])
                 
-                        # Cierre circular
-                        next_j = (j + 1) % DensityRing
-                        EdgesRing.append([idx, level * DensityRing + next_j])
-               
-                RingNode.addObject("Mesh", name="RingMesh", position=PointsRing, edges=EdgesRing)                
-                RingNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)
-                RingNode.addObject("MeshSpringForceField", linesStiffness=7e6)
-                RingNode.addObject("BarycentricMapping")
+                        Points.append([x, y, z])
+                
+                        if i < Density - 1:
+                            Edges.append([idx, idx + 1])
+                
 
+                offset_neg = len(Points)
+                
+                for j in range(Repeat):
+                
+                    theta0 = j * dTheta_fiber
+                
+                    for i in range(Density):
+                
+                        theta = theta0 - i * dTheta_level
+                        y = Ymin + i * dy
+                
+                        idx = len(Points)
+                
+                        x = Radius * np.cos(theta)
+                        z = Radius * np.sin(theta)
+                
+                        Points.append([x, y, z])
+                
+                        if i < Density - 1:
+                            Edges.append([idx, idx + 1])
+                
 
-  
+                def add_cap_connections(offset, level_i):
+                
+                    for j in range(half):
+                
+                        # nodos extremos de fibras opuestas
+                        idx1 = offset + j * Density + level_i
+                        idx2 = offset + (j + half) * Density + level_i
+                
+                        p1 = np.array(Points[idx1])
+                        p2 = np.array(Points[idx2])
+                
+                        cap_idx = []
+                
+                        for k in range(CapDensity + 1):
+                            alpha = k / CapDensity
+                            p = (1 - alpha) * p1 + alpha * p2
+                            cap_idx.append(len(Points))
+                            Points.append(p.tolist())
+                
+                        for k in range(CapDensity):
+                            Edges.append([cap_idx[k], cap_idx[k + 1]])
+                
+                
+                # hélice positiva
+                add_cap_connections(offset_pos, 0)               # tapa inferior
+                add_cap_connections(offset_pos, Density - 1)     # tapa superior
+    
+                
+                FiberNode.addObject("Mesh", position=Points, name="Mesh", edges=Edges)
+                FiberNode.addObject("MechanicalObject", showObject=True, showObjectScale=10)                
+                FiberNode.addObject("MeshSpringForceField", linesStiffness=5e5)
+                FiberNode.addObject("BarycentricMapping")
                 
                 
         # Punto "End-effector"
@@ -445,7 +403,7 @@ def createScene(rootNode):
                 
 		#cubito/cavity
                 cavity = cubito.addChild('cavity1')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoAcordeon_Cavity01.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='Cubito_Cavity01.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')
                 SPC1 = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)                
@@ -453,7 +411,7 @@ def createScene(rootNode):
 
 	
                 cavity = cubito.addChild('cavity2')
-                cavity.addObject('MeshSTLLoader', name='loader', filename='CubitoRotador_Cavity02.stl')
+                cavity.addObject('MeshSTLLoader', name='loader', filename='Cubito_Cavity02.stl')
                 cavity.addObject('MeshTopology', src='@loader', name='topo')
                 cavity.addObject('MechanicalObject', name='cavity')           
                 SPC2 = cavity.addObject('SurfacePressureConstraint', triangles='@topo.triangles', value=0, valueType=0)                

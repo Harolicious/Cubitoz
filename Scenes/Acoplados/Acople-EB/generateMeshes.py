@@ -9,31 +9,10 @@ Created on Thu Oct 26 14:02:25 2023
 import Constants
 import numpy as np
 import gmsh
+from defineMeshSizes import defineMeshSizes
+from meshembed import meshembed
 
 gmsh.initialize()
-
-def defineMeshSizes(lc=0.5):   
-    #-------------------
-    # MeshSizes 
-    #-------------------
-
-    gmsh.model.mesh.field.add("Box", 1)
-    gmsh.model.mesh.field.setNumber(1, "VIn", lc)
-    gmsh.model.mesh.field.setNumber(1, "VOut", lc)
-    gmsh.model.mesh.field.setNumber(1, "XMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "XMax", 100)
-    gmsh.model.mesh.field.setNumber(1, "YMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "YMax", 100)
-    gmsh.model.mesh.field.setNumber(1, "ZMin", -100)
-    gmsh.model.mesh.field.setNumber(1, "ZMax", 100)    
-    gmsh.model.mesh.field.setNumber(1, "Thickness", 0.3)
-     
-    gmsh.model.mesh.field.setAsBackgroundMesh(1)
-    
-    gmsh.option.setNumber("Mesh.CharacteristicLengthExtendFromBoundary", 0)
-    gmsh.option.setNumber("Mesh.CharacteristicLengthFromPoints", 0)
-    gmsh.option.setNumber("Mesh.CharacteristicLengthFromCurvature", 0)
-    
 
 LadoCubo = Constants.LadoCubo
 AlturaCilindro = Constants.AlturaCilindro
@@ -43,6 +22,7 @@ RadioCilindro = Constants.RadioCilindro
 
 Box1Tag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
 DimTagBox1 = (3, Box1Tag)
+meshembed(LadoCubo, 1, 0.01, Box1Tag, 0)
 
 Cylinder1Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder1 = (3, Cylinder1Tag)
@@ -50,6 +30,7 @@ DimTagCylinder1 = (3, Cylinder1Tag)
 
 Box2Tag = gmsh.model.occ.addBox(-LadoCubo/2, LadoCubo,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
 DimTagBox2 = (3, Box2Tag)
+meshembed(LadoCubo, 1, 0.01, Box2Tag, LadoCubo)
 
 Cylinder2Tag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2 + LadoCubo,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
 DimTagCylinder2 = (3, Cylinder2Tag)
@@ -59,8 +40,8 @@ EnsambleDimTag = FusionOut[0][0]
 EnsambleDimTags = FusionOut[0]
 
 
-
 Cutout1 = gmsh.model.occ.cut(EnsambleDimTags, [DimTagCylinder1,DimTagCylinder2])
+
 
 #Cutout1 = gmsh.model.occ.cut([DimTagBox1], [DimTagCylinder1])
 #Cutout2 = gmsh.model.occ.cut([DimTagBox2], [DimTagCylinder2])

@@ -15,14 +15,14 @@ from meshembed import meshembed
 gmsh.initialize()
  
 LadoCubo = Constants.LadoCubo
-AlturaCilindro = Constants.AlturaCilindro
-RadioCilindro = Constants.RadioCilindro
+AlturaCilindro_s = Constants.AlturaCilindro_s_s
+RadioCilindro_s = Constants.RadioCilindro_s_s
 
 
 BoxTag = gmsh.model.occ.addBox(-LadoCubo/2,0,-LadoCubo/2,LadoCubo, LadoCubo, LadoCubo)
 DimTagBox = (3, BoxTag)
 
-CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0,0, AlturaCilindro, 0 , RadioCilindro, angle= 2*np.pi)
+CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro_s)/2,0,0, AlturaCilindro_s, 0 , RadioCilindro_s, angle= 2*np.pi)
 DimTagCylinder = (3, CylinderTag)
 DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
@@ -40,7 +40,7 @@ gmsh.fltk.run()
 
 gmsh.clear()
 
-CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro)/2,0, 0, AlturaCilindro,0, RadioCilindro, angle= 2*np.pi)
+CylinderTag = gmsh.model.occ.addCylinder(0, (LadoCubo-AlturaCilindro_s)/2,0, 0, AlturaCilindro_s,0, RadioCilindro_s, angle= 2*np.pi)
 DimTagCylinder = (3, CylinderTag)
 DimTagcylinder = gmsh.model.occ.rotate([DimTagCylinder], 0, LadoCubo/2, 0, 0, 0, 1, -np.pi/4)
 
